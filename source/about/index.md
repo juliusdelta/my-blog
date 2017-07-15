@@ -1,7 +1,7 @@
 ---
 title: About Me
 date: 2017-07-14 23:06:10
-layout: about
+layout: page
 ---
 
 **My name is Jonathan "J.D." Gonzales. I'm a programmer currently residing in Dallas, Texas.**

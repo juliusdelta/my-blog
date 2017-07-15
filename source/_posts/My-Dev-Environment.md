@@ -1,6 +1,7 @@
 ---
 title: My Dev Environment
 tags: development
+layout: page
 date: 2017-04-11 20:53:18
 ---
 
