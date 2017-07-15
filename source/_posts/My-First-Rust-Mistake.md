@@ -1,6 +1,7 @@
 ---
 title: My-First-Rust-Mistake
 date: 2017-07-14 21:19:33
+layout: post
 tags: rust
 ---
 
