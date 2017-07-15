@@ -1,7 +1,7 @@
 ---
 title: Recursion is Your Friend, Till it isn't
 date: 2017-04-12 09:52:06
-layout: page
+layout: posts
 tags: recursion
 ---
 
