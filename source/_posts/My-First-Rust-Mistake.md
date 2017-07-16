@@ -1,5 +1,5 @@
 ---
-title: My-First-Rust-Mistake
+title: My First Rust Mistake
 date: 2017-07-14 21:19:33
 layout: page
 tags: rust
