@@ -1,7 +1,7 @@
 ---
 title: Tips for Breaking into the Tech Industry 
 date: 2017-04-13 18:54:37
-layout: posts
+layout: page
 tags: jobs
 ---
 
