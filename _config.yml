@@ -65,6 +65,11 @@ pagination_dir: page
 ## Themes: https://hexo.io/themes/
 theme: maupassant2
 
+# Spotify
+spotify:
+  size: 'large'
+  view: 'list'
+
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:

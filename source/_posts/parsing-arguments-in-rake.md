@@ -102,7 +102,7 @@ end
 
 When you call `o.on` you pass in your agruments for what you want the flags to be, then you pass that to a lambda which will perform what ever action you choose with the given argument. I had to use `-s` for browser_version cause I lost creativity and it only works with one letter.
 
-Finally I just cleaned up the args, converted it to a string using `.inspect`. You can also see I went ahead and printed options to the console so you could see what you did when you run the test.
+Finally I just cleaned up the args and converted it to a string using `.inspect`. You can also see I went ahead and printed options to the console so you could see what you did when you run the test.
 
 ```ruby
   args = o.order!(ARGV) {}
@@ -115,7 +115,7 @@ Finally I just cleaned up the args, converted it to a string using `.inspect`. Y
   ENV['CONFIG_SET'] ||= options.inspect
 ```
 
-I used `.inspect` to turn the `options` hash into a `String` since environment variables can only be strings, as far as I can tell anyway. Once it is set, it's thrown into my main configuration hash in a `spec_helper` file to be used by the specs. Once in there I call `eval(ENV['CONFIG_SET'])` to convert it back into a string. This _only_ works if the items in the original Hash were Strings or Symbols. If they were custom objects then it won't work.
+I used `.inspect` to turn the `options` hash into a `String` since environment variables can only be strings, as far as I can tell anyway. Once it is set, it's thrown into my main configuration hash in a `spec_helper` file to be used by the specs. Once in there I call `eval(ENV['CONFIG_SET'])` to convert it back into a hash. This _only_ works if the items in the original Hash values were Strings or Symbols. If they were custom objects then it won't work.
 
 ## Conclusion
 
