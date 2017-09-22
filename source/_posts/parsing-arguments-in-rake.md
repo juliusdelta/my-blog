@@ -5,7 +5,8 @@ date: 2017-09-08 01:10:35
 tags: ruby
 ---
 
-I'm currently working as a Quality Assurance Engineer at a company called [Modern Message](https://modernmsg.com). Automating tests via an external service for VMs is something sorely needed. In the midst of configuring the automated test suite I figured out a good way to parse arguments given to rake tasks so I can test on whatever VM easily.
+I'm currently working as a Quality Assurance Engineer at a company called [Modern Message](https://modernmsg.com). Automating tests via an external service for VMs is something sorely needed.<!-- more --> In the midst of configuring the automated test suite I figured out a good way to parse arguments given to rake tasks so I can test on whatever VM easily.
+
 
 _If you want to quickly jump down to the good stuff scroll to OptionParser or The Use Case_
 

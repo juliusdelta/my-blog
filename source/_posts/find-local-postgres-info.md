@@ -2,11 +2,17 @@
 title: Finding Your Local PostgreSQL Info
 layout: page
 date: 2017-08-31 19:47:09
-tags:
+categories:
+- programming
+tags: 
+- databases
+- postgresql
+thumbnailImagePosition: "left"
+thumbnailImage: https://i.imgur.com/PJgoZfR.png
 ---
 
 I ran into a snag while trying to configure [diesel](https://diesel.rs) to run locally so I can develop a [Rust API](https://github.com/juliusdelta/rust-rocket-api). Just thought I'd share a tip for figuring out some PostgreSQL info.
-
+<!-- more -->
 
 ### Installation
 

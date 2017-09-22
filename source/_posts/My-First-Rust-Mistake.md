@@ -5,7 +5,7 @@ layout: page
 tags: rust
 ---
 
-I've been tinkering with Rust the last few days, as I'm planning to build a simple api application over the next few days. What's fascinating to me is all the tiny mistakes I make when I'm just trying to learn rust code. The first programming language I became really familiar with was Ruby, but learning something as complex as Rust is way different. I'm contemplating making a small list of postings surrounding the tiny errors I make in hopes to help someone else with those same errors. So this is the first post in that "series" if I decide to go that route.
+I've been tinkering with Rust the last few days, as I'm planning to build a simple api application over the next few days. What's fascinating to me is all the tiny mistakes I make when I'm just trying to learn rust code. <!--more-->The first programming language I became really familiar with was Ruby, but learning something as complex as Rust is way different. I'm contemplating making a small list of postings surrounding the tiny errors I make in hopes to help someone else with those same errors. So this is the first post in that "series" if I decide to go that route.
 
 # The Program
 

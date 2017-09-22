@@ -5,7 +5,7 @@ layout: page
 tags: recursion
 ---
 
-I was fairly new to data structures when I had to implement a binary heap (tree) in Ruby. It was challenging for me to say the least, but what made it especially challenging was that I had a new found love for recursion. This is not an in depth tutorial on recursion or binary trees, but simply an example case of when/when not to use recursion to accomplish your task and how to weigh your options.
+I was fairly new to data structures when I had to implement a binary heap (tree) in Ruby. It was challenging for me to say the least, but what made it especially challenging was that I had a new found love for recursion. <!--more-->This is not an in depth tutorial on recursion or binary trees, but simply an example case of when/when not to use recursion to accomplish your task and how to weigh your options.
 
 # Binary Tree
 If you’re unfamiliar with a binary tree, I’ll do a quick explanation of what they are. It’s simply a data structure shaped like a tree. The root is the first item. That root has two children, a left and a right child. Each of those two children have their own left and right children and so forth.

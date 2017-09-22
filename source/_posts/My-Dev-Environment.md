@@ -3,11 +3,15 @@ title: My Dev Environment
 layout: page
 tags: development
 date: 2017-04-11 20:53:18
+thumbnailImagePosition: left
+thumbnailImage: https://pbs.twimg.com/media/B_6dr4hU0AAAp6Q.png
+coverImage: https://pbs.twimg.com/media/B_6dr4hU0AAAp6Q.png
 ---
 
 
 I've spent a lot of time trying out different solutions for my dev environment since I started coding almost 2 years ago. Since then I've
 developed very strong opinions about what I look for in an editor. 
+<!--more-->
 
 # Spacemacs
 ![Spacemacs](https://pbs.twimg.com/media/B_6dr4hU0AAAp6Q.png)
