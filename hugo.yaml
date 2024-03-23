@@ -1,3 +1,130 @@
-baseURL: https://example.org/
+baseURL: https://jds.work
 languageCode: en-us
-title: My New Hugo Site
+title: JDs Work
+paginate: 5
+theme: ["PaperModX"]
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+params:
+  env: production # to enable google analytics, opengraph, twitter-cards and schema.
+  title: JDs Work
+  description: "A place to talk about stuff."
+  keywords: [Blog, Development, Emacs, Tech]
+  author: Me
+  #images: ["<link or path of image for opengraph, twitter-cards>"]
+  DateFormat: "January 2, 2006"
+  defaultTheme: auto # dark, light
+  disableThemeToggle: false
+
+  ShowReadingTime: true
+  ShowShareButtons: false
+  # ShareButtons: ["twitter", "mastodon", "reddit"]
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: false
+  disableSpecial1stPost: true
+  disableScrollToTop: false
+  comments: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: false
+  TocOpen: false
+  TocSide: right
+
+  label:
+    text: "Home"
+    icon: /apple-touch-icon.png
+    iconHeight: 35
+
+  profileMode:
+    enabled: false
+    title: JDs Work
+    subtitle: "A place to write about software development, emacs, and working in the 21st century."
+    imageUrl: "<img location>"
+    imageWidth: 120
+    imageHeight: 120
+    imageTitle: my image
+    buttons:
+      - name: Posts
+        url: posts
+      - name: Tags
+        url: tags
+
+  homeInfoParams:
+    Title: "Hi there \U0001F44B"
+    Content: |
+      I'm a developer based in Fort Worth, Texas. I write about...
+
+      - Software Development
+      - Emacs
+      - Working in Tech in the 21st Century
+
+      To get in contact, click on one of the links below.
+
+  socialIcons:
+    - name: twitter
+      url: "https://x.com/ohimjustjd"
+    - name: mastodon
+      url: "https://fosstodon.org/@juliusdelta"
+    - name: github
+      url: "https://github.com/juliusdelta"
+    - name: email
+      url: "public@jds.work"
+
+  cover:
+    hidden: false # hide everywhere but not in structured data
+    hiddenInList: false # hide on list pages and home
+    hiddenInSingle: false # hide on single page
+
+  editPost:
+    URL: "https://github.com/juliusdelta/my-blog/content"
+    Text: "Suggest Revision(s)"
+    appendFilePath: true
+
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    limit: 10
+    keys: ["title", "permalink", "summary", "content"]
+
+menu:
+  main:
+    - identifier: categories
+      name: categories
+      url: /categories/
+      weight: 10
+    - identifier: tags
+      name: tags
+      url: /tags/
+      weight: 20
+    - identifier: archives
+      name: archives
+      url: /archives/
+      weight: 30
+
+pygmentsUseClasses: true
+markup:
+  highlight:
+    noClasses: false
+    # anchorLineNos: true
+    # codeFences: true
+    # guessSyntax: true
+    # lineNos: true
+    # style: monokai
