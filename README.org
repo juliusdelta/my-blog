@@ -1,0 +1,3 @@
+#+title: My Blog
+
+This repo contains my personal blog. It's built on Hugo using the PaperModX theme. I use `ox-hugo` to write posts in emacs, and am using `config.org` as literate configuration for any overrides or the `hugo.yaml` configuration file.
