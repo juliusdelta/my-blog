@@ -83,11 +83,11 @@ Never show social share buttons, at least for now. I don't know if it's worth it
   TocSide: right
 #+end_src
 
-This is currently ignored until I come up with a decent set of favicons
+I'm using the default favicon system. This isn't tangled.
 #+begin_src yaml :tangle no
 assets:
-  # disableHLJS: true # to disable highlight.js
-  # disableFingerprinting: true
+  disableHLJS: true # to disable highlight.js
+  disableFingerprinting: true
   favicon: "<link / abs url>"
   favicon16x16: "<link / abs url>"
   favicon32x32: "<link / abs url>"
@@ -97,7 +97,7 @@ assets:
 
 #+begin_src yaml
   label:
-    text: "Home"
+    text: "JDs Work"
     icon: /apple-touch-icon.png
     iconHeight: 35
 #+end_src
@@ -127,8 +127,9 @@ Profile mode is a PaperMod setting that will display a splash page before gettin
       - Emacs
       - Working in Tech in the 21st Century
 
-      To get in contact, click on one of the links below.
+      When I'm not working or spending time with my family I'm probably working on my homelab.
 
+      To get in contact, click on one of the links below.
 #+end_src
 
 #+begin_src yaml

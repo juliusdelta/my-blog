@@ -45,7 +45,7 @@ params:
   TocSide: right
 
   label:
-    text: "Home"
+    text: "JDs Work"
     icon: /apple-touch-icon.png
     iconHeight: 35
 
@@ -71,6 +71,8 @@ params:
       - Software Development
       - Emacs
       - Working in Tech in the 21st Century
+
+      When I'm not working or spending time with my family I'm probably working on my homelab.
 
       To get in contact, click on one of the links below.
 
