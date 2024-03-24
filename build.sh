@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "Building hugo..."
-hugo 2>&1
+
+hugo -b $CF_PAGES_URL 2>&1
 echo "Hugo site built!"
 
 echo "Copying _redirects..."
