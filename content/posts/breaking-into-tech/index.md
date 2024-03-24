@@ -6,19 +6,13 @@ tags: ["advice"]
 categories: ["career"]
 draft: false
 description: "It took me a long time to find a job, so I thought I'd share my most useful advice on the matter. It's an uphill battle, but once you get the first one, the rest are easy."
-cover:
-  image: "./image.url"
-  alt: "alt text"
-  caption: "caption"
-  relative: "false"
-  hidden: "true"
 ---
 
 > This is a repost of my original 2017 blog post. It maybe a little outdated.
 
-I recently got my first developer job as a Quality Assurance Engineer at a company called [Modern Message](<http://modernmsg.com>) and I want to share a few tips on things I did to help me eventually land this job.
+I recently got my first developer job as a Quality Assurance Engineer at a company called [Modern Message](http://modernmsg.com) and I want to share a few tips on things I did to help me eventually land this job.
 
-I'm a student at [Bloc](<http://bloc.io>) which is a remote, self-paced developer bootcamp. I managed to pick their longest track called the Software Engineering Track.
+I'm a student at [Bloc](http://bloc.io) which is a remote, self-paced developer bootcamp. I managed to pick their longest track called the Software Engineering Track.
 
 
 ## It's a Numbers Game {#it-s-a-numbers-game}
@@ -27,7 +21,7 @@ When I was searching for a job, I assumed 5% of my applications would result in 
 
 If 5% of your applications result in a job, lets say 20% actually call you after applying. This is great news. That's 20 out of 100 applications. That's 20 opportunities. If your working hard, just 1 of those opportunities is enough.
 
-While I'm sure that the actual stats are much different based on a very large number of factors, that stat still <span class="underline">is</span> some number though, which means each application you send out, gets you one step closer to the employer that'll make you an offer. Keep this at the forfront of your mind, cause finding your first gig can be real up hill struggle. Just remember, each place you apply, increases your chances of getting an offer. It may seem basic, but it kept me going after sending out my 120th application.
+While I'm sure that the actual stats are much different based on a very large number of factors, that stat still _is_ some number though, which means each application you send out, gets you one step closer to the employer that'll make you an offer. Keep this at the forfront of your mind, cause finding your first gig can be real up hill struggle. Just remember, each place you apply, increases your chances of getting an offer. It may seem basic, but it kept me going after sending out my 120th application.
 
 
 ## The Industry {#the-industry}
@@ -41,7 +35,7 @@ There's a few things that I felt like companies were really looking for when it 
 
 ### Industry Fit {#industry-fit}
 
-A business wants to know you're passionate about what you're doing. That you're keeping up with issues/news about the software industry. There's plenty of places to get this info like [HackerNews](<https://news.ycombinator.com>) or [Reddit](<https://reddit.com/r/programming>). You can easily see trends and see the focus of people in the industry to gauge better what you should be learning about and what you can talk about in interviews.
+A business wants to know you're passionate about what you're doing. That you're keeping up with issues/news about the software industry. There's plenty of places to get this info like [HackerNews](https://news.ycombinator.com) or [Reddit](https://reddit.com/r/programming). You can easily see trends and see the focus of people in the industry to gauge better what you should be learning about and what you can talk about in interviews.
 
 ES6 was a new thing when I was hunting, so being able to at least discuss it, even at just a high level, benefitted me in a couple interviews.
 
@@ -100,7 +94,7 @@ I did this to almost every person I met at Meet Ups.
 
 **Coffee**
 
-I asked about 8 developers for coffee in my job search. Through that I was able to get to know them, pick their brains and learn. Another engineer, Haseeb Qureshi has a great [blog](<http://haseebq.com/how-to-break-into-tech-job-hunting-and-interviews/>) on this whole topic, especially networking. If you're still reading this and not his blog (which is totally the wrong move by the way) here's what I did.
+I asked about 8 developers for coffee in my job search. Through that I was able to get to know them, pick their brains and learn. Another engineer, Haseeb Qureshi has a great [blog](http://haseebq.com/how-to-break-into-tech-job-hunting-and-interviews/) on this whole topic, especially networking. If you're still reading this and not his blog (which is totally the wrong move by the way) here's what I did.
 
 I went to a Meet Up and asked one of the obvious experienced engineers out for coffee. He was very kind and obliged. I paid, and got to sit down with him for almost 2 hours just picking his brain. At the end I asked, "I'm really trying to get a job as a developer using x technology, mostly right now I'm just trying to get to know people and learn from them. Do you have someone else you can reccommend I talk to?"
 
@@ -117,7 +111,7 @@ There's a couple of things to practice when looking for developer job.
 
 ### Whiteboarding {#whiteboarding}
 
-This is some what of a controversial subject. It's good to go into it with the mentaility of solving problems instead of actually coding. I did several whiteboarding interviews that involved dealing with collisions in hashes, implementing a method on a string like \`.reverse\`, and taking an algorithm and making it faster. All these are skills that can be practiced easily, but there's a method which will give you great results.
+This is some what of a controversial subject. It's good to go into it with the mentaility of solving problems instead of actually coding. I did several whiteboarding interviews that involved dealing with collisions in hashes, implementing a method on a string like `.reverse`, and taking an algorithm and making it faster. All these are skills that can be practiced easily, but there's a method which will give you great results.
 
 1.  Find the problem
     1.  CodeWars
@@ -129,7 +123,7 @@ This is some what of a controversial subject. It's good to go into it with the m
     3.  Explain your thought process and theory before writing one line of code.
 3.  Code and explain the solution
 
-Using these steps will give you good practice for what whiteboarding is like. Most of the hiring managers I've spoken too, don't emphasize the right answer as much as being able to solve the problem and communicate the <span class="underline">idea</span> behind the solution.
+Using these steps will give you good practice for what whiteboarding is like. Most of the hiring managers I've spoken too, don't emphasize the right answer as much as being able to solve the problem and communicate the _idea_ behind the solution.
 
 
 ### Answering Questions {#answering-questions}

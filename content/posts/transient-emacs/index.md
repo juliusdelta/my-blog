@@ -53,6 +53,7 @@ _**Note:** Each of the Examples work and can be evaluated inside of Emacs and I 
 
 <details>
 <summary>💬 Evaluating the Examples Quick Guide</summary>
+<div class="details">
 
 Here's how to evaluate the example code in Emacs in case you don't know or forgot. I encourage you to type each example out instead of copying and pasting.
 
@@ -63,4 +64,74 @@ Here's how to evaluate the example code in Emacs in case you don't know or forgo
 
 5.  Create a region around the current example code and call \`M-x (eval-region)\`
 6.  Run the prefix command we're working on with \`M-x (my/transient)\`
+</div>
 </details>
+
+
+## Example 1 {#example-1}
+
+Lets define a simple transient to just output a message.
+
+```emacs-lisp
+(transient-define-prefix my/transient ()
+  "My Transient"
+  ["Commands" ("m" "message" my/message-from-transient)])
+
+(defun my/message-from-transient ()
+  "Just a quick testing function."
+  (interactive)
+  (message "Hello Transient!"))
+```
+
+Once evaluated, `M-x my/transient` can be invoked and a transient opens with one suffix command `m` which maps to `my/message-from-transient` and outputs a message to the minibuffer.
+
+{{< figure src="example-1.gif" >}}
+
+
+### Explain {#explain}
+
+`transient-define-prefix` is a macro used to define a simple prefix and create everything Transient needs to operate. The body is where we define our Transient keymap, which in this case is called `"Commands"`. The body can define multiple sets of keymaps and each one should be defined as a vector where the first element is the "name" or "title" the current set of commands, and the subsequent N number of lists make up the whole map. The lists are in the format of (but not limited to) `(KEY DESCRIPTION FUNCTION)`. The `FUNCTION` arg must be `interactive` in order to work.
+
+There are a handful of other ways to define the Transient elements, but we'll stick with this simple version. If you're interested in more complex methods refer back to Positrons guide.
+
+Lets expand our example a bit by adding arguments and switches.
+
+
+## Example 2 {#example-2}
+
+Here we will add 2 types of arguments: switches and arguments with a readable value.
+
+```emacs-lisp { hl_lines=["4-6","13-16"] }
+(transient-define-prefix my/transient ()
+  "My Transient"
+
+  ["Arguments & Switches"
+    ("-s" "Switch" "--switch")
+    ("-n" "Name Argument" "--name=")]
+
+  ["Commands"
+    ("m" "message" my/message-from-transient)])
+
+(defun my/message-from-transient (&optional args)
+  "Just a quick testing function."
+  (interactive (list (transient-args transient-current-command)))
+  (if (transient-arg-value "--switch" args)
+    (message
+      (concat "Hello: " (transient-arg-value "--name=" args)))))
+```
+
+Now we have a transient that gives us 2 infixes or "arguments".
+
+-   `-s` is the keymapped "command" to toggle the `--switch` argument. A good example of this is a terminal command like `ls -a` where `-a` is a boolean type value that toggles `all` on for `ls`.
+-   `-n` is the keymapped "command" to prompt for a minibuffer input to enter in what's appended to the `--name=` argument.
+
+Once evaluated we can now run the transient with `M-x my/transient` and then press `-` followed by `s` to toggle the `--switch` switch argument. Pressing `-n` will engage the `--name=` which will generate a minibuffer prompt to read user input. Once `Enter` is pressed the minibuffer prompt will finish and the value entered will be displayed in the Transient menu itself. Pressing `m` will engage the suffix. With `--switch` toggled on a message should appear in the minibuffer: "Hello: " followed by the input to `--name=`. Performing the flow with `--switch` toggled <span class="underline">off</span> results in nothing being displayed
+
+{{< figure src="example-2.gif" >}}
+
+
+### Explain {#explain}
+
+The suffix changes on `my/message-from-transient` are minimal but very important.
+
+Transient will detect the `=` and determine that the value for that argument must be some kind of readable input from the user.

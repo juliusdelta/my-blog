@@ -76,23 +76,84 @@ While the actual model is much more complex than I've lead on and has many more 
 	4. Run the prefix command we're working on with `M-x (my/transient)`
 #+end_details
 
+** Example 1
+Lets define a simple transient to just output a message.
 
-* Managing Local Services in Emacs with Prodigy :emacs:packages:tools:@emacs:
+#+begin_src emacs-lisp
+(transient-define-prefix my/transient ()
+  "My Transient"
+  ["Commands" ("m" "message" my/message-from-transient)])
+
+(defun my/message-from-transient ()
+  "Just a quick testing function."
+  (interactive)
+  (message "Hello Transient!"))
+#+end_src
+
+Once evaluated, =M-x my/transient= can be invoked and a transient opens with one suffix command =m= which maps to =my/message-from-transient= and outputs a message to the minibuffer.
+
+[[file:transient-emacs/example-1.gif]]
+
+*** Explain
+=transient-define-prefix= is a macro used to define a simple prefix and create everything Transient needs to operate. The body is where we define our Transient keymap, which in this case is called ="Commands"=. The body can define multiple sets of keymaps and each one should be defined as a vector where the first element is the "name" or "title" the current set of commands, and the subsequent N number of lists make up the whole map. The lists are in the format of (but not limited to) =(KEY DESCRIPTION FUNCTION)=. The =FUNCTION= arg must be =interactive= in order to work.
+
+There are a handful of other ways to define the Transient elements, but we'll stick with this simple version. If you're interested in more complex methods refer back to Positrons guide.
+
+Lets expand our example a bit by adding arguments and switches.
+
+** Example 2
+Here we will add 2 types of arguments: switches and arguments with a readable value.
+
+#+begin_src emacs-lisp :hl_lines 4-6,13-16
+(transient-define-prefix my/transient ()
+  "My Transient"
+
+  ["Arguments & Switches"
+    ("-s" "Switch" "--switch")
+    ("-n" "Name Argument" "--name=")]
+
+  ["Commands"
+    ("m" "message" my/message-from-transient)])
+
+(defun my/message-from-transient (&optional args)
+  "Just a quick testing function."
+  (interactive (list (transient-args transient-current-command)))
+  (if (transient-arg-value "--switch" args)
+    (message
+      (concat "Hello: " (transient-arg-value "--name=" args)))))
+#+end_src
+
+Now we have a transient that gives us 2 infixes or "arguments".
+
+- =-s= is the keymapped "command" to toggle the =--switch= argument. A good example of this is a terminal command like =ls -a= where =-a= is a boolean type value that toggles =all= on for =ls=.
+- =-n= is the keymapped "command" to prompt for a minibuffer input to enter in what's appended to the =--name== argument.
+
+Once evaluated we can now run the transient with =M-x my/transient= and then press =-= followed by =s= to toggle the =--switch= switch argument. Pressing =-n= will engage the =--name== which will generate a minibuffer prompt to read user input. Once =Enter= is pressed the minibuffer prompt will finish and the value entered will be displayed in the Transient menu itself. Pressing =m= will engage the suffix. With =--switch= toggled on a message should appear in the minibuffer: "Hello: " followed by the input to =--name==. Performing the flow with =--switch= toggled _off_ results in nothing being displayed
+
+[[file:transient-emacs/example-2.gif]]
+
+*** Explain
+The suffix changes on =my/message-from-transient= are minimal but very important.
+
+Transient will detect the === and determine that the value for that argument must be some kind of readable input from the user.
+
+* DONE Managing Local Services in Emacs with Prodigy :emacs:packages:tools:@emacs:
 :PROPERTIES:
 :EXPORT_HUGO_BUNDLE: emacs-prodigy
 :EXPORT_FILE_NAME: index
 :EXPORT_DATE: 2024-03-15
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Prodigy is an Emacs package that allows you to manage local services easily."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
 :END:
 
 [[https://github.com/rejeep/prodigy.el][Prodigy]] is an incredible tool of convenience for me. I've been slowly migrating my entire workflow into Emacs and Prodigy has become a staple in my day to day.
 
-** What is Prodigy?
+## What is Prodigy?
+
 #+begin_quote
 Manage external services from within Emacs
-
 I came up with the idea when I got to work one Monday morning and before I could start working I had to manually start ten or so services.
-
 To get rid of this tedious work, I started working on this Emacs plugin, which provides a nice and simple GUI to manage services.
 
  -- Johan Andersson (author of Prodigy)
@@ -100,8 +161,1030 @@ To get rid of this tedious work, I started working on this Emacs plugin, which p
 
 This has to be probably the most "Emacs user" solution to a problem I've ever heard.
 
-In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [zola](https://www.getzola.org/) and the command to start the server is `zola serve`. Instead of managing a terminal buffer or _worse_ switching to a terminal app I can define the following in my config:
+In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [[https://www.getzola.org/][zola]] and the command to start the server is =zola serve=. Instead of managing a terminal buffer or /worse/ switching to a terminal app I can define the following in my config:
 
+#+begin_src emacs-lisp
+(prodigy-define-service
+  :name "Personal Blog"
+  :command "zola"
+  :args '("serve")
+  :cwd "~/code/my-blog-v2"
+  :tags '(personal))
+#+end_src
+
+Now when I run =M-x prodigy= a buffer comes up showing me the service I've defined. (It's running as I'm writing this and taking screenshots).
+
+[[file:emacs-prodigy/prodigy.jpeg]]
+
+You can also very easily open a buffer with the log output for inspecting/debugging:
+
+[[file:emacs-prodigy/prodigy-log.jpeg]]
+
+This interface takes a lot of inspiration from `dired` in that services can be marked and then acted upon in some way so you can start or stop multiple services at one time. In the UI, you can filter services by tags or name, which allows you to build groups of services really easily that pertain to a particular project. After filtering your defined services, you can then select all of them with `prodigy-mark-all` and then `prodigy-start` to kick them all off.
+
+Here's a list of all the default keybindings in the `prodigy-mode` buffer:
+
+| key   | function                  |
+|-------+---------------------------|
+| `n`   | prodigy-next              |
+| `p`   | prodigy-prev              |
+| `M-<` | prodigy-first             |
+| `M->` | prodigy-last              |
+| `m`   | prodigy-mark              |
+| `t`   | prodigy-mark-tag          |
+| `M`   | prodigy-mark-all          |
+| `u`   | prodigy-unmark            |
+| `T`   | prodigy-unmark-tag        |
+| `U`   | prodigy-unmark-all        |
+| `s`   | prodigy-start             |
+| `S`   | prodigy-stop              |
+| `r`   | prodigy-restart           |
+| `$`   | prodigy-display-process   |
+| `o`   | prodigy-browse            |
+| `f t` | prodigy-add-tag-filter    |
+| `f n` | prodigy-add-name-filter   |
+| `F  ` | prodigy-clear-filters     |
+| `j m` | prodigy-jump-magit        |
+| `j d` | prodigy-jump-file-manager |
+| `M-n` | prodigy-next-with-status  |
+| `M-p` | prodigy-prev-with-status  |
+| `C-w` | prodigy-copy-cmd          |
+
+** Tags
+Here's a more intense use case. The product I work on at my day job has about 26 services accross a couple different applications, databases, cache systems, asset compilers/transpilers, kafka consumers, and background job servers.
+
+#+begin_src emacs-lisp
+;; In eshell
+~ λ (length (prodigy-services-tagged-with 'work))
+
+26
+#+end_src
+
+The default on my team is to use 3 different Procfiles in 2 different repositories to spin everything up. That's a /pain/ honestly, especially when you have to inspect logs that are intermingled with half a dozen other service logs. [[https://github.com/DarthSim/overmind][Overmind]] has been suggested and has some support in my engineering org, but being pushed into using tmux is more annoying than anything to me.
+
+Tags are *very* useful for me as not only can I quickly select a subset of services, but I can also add some shared configuration among similar services. Here's the tag I use for all the Kafka consumers:
+
+#+begin_src emacs-lisp
+(prodigy-define-tag
+  :name 'cf-consumer
+  :ready-message "=> Ctrl-C to shutdown consumer")
+#+end_src
+
+You can see here that it indicates a `ready-message`. This tag attribute will utilize Prodigy's log "identifying" regex in order to tell Prodigy that a service is status "ready". This regex is matched against all log output until it's matched, at which point Prodigy will identify the service status as "ready". This makes it easy to manually tell Prodigy exactly when a service is done spinning up. Here's another tag:
+
+#+begin_src emacs-lisp
+(prodigy-define-tag
+  :name 'rails
+  :on-output (lambda (&rest args)
+               (let ((output (plist-get args :output))
+                     (service (plist-get args :service)))
+                 (when (or (s-matches? "Listening on 0\.0\.0\.0:[0-9]+, CTRL\\+C to stop" output)
+                           (s-matches? "Use Ctrl-C to stop" output))
+                   (prodigy-set-status service 'ready)))))
+#+end_src
+
+This is basically ripped straight from Prodigy's README but it works like a charm for me. Every output log line will run this callback and is useful for triggering custom side effects or, as I'm doing here, telling prodigy the service is ready. I run 3 Rails apps so being able to just tag them all with `'rails` makes it easy to add the configuration everywhere without rewriting it everytime and tells me what behavior the Prodigy services is relying on at a glance in the prodigy buffer. You don't /have/ to do it this way, I just found it useful to experiment with as I was configuring things, so I left it.
+
+** Service Definitions
+
+Prodigy is such a simple package and it's configuration api is also very simple, but for completeness sake here I'll explain a bit more about configuring services.
+
+#+begin_src emacs-lisp
+(prodigy-define-service
+  :name "esbuild-app"
+  :cwd "~/code/admin"
+  :command "yarn"
+  :args '("build" "--watch")
+  :ready-message "successfully rebuilt - now reloading"
+  :tags '(work cf-frontend))
+
+(prodigy-define-service
+  :name "cf-chat-frontend"
+  :command "webpack-dev-server"
+  :args '("s" "-p" "5002")
+  :cwd "~/code/cfchat"
+  :path '("~/code/cfchat/bin")
+  :ready-message "Built at:"
+  :tags '(work))
+#+end_src
+
+The configuration is fairly straight forward. The =name=, =command=, and =args= are all defined as you'd expect. Then =cwd= will be the path to the directory where the =command= should be executed. In some cases, the binary for the command you need to run isn't in =$PATH= so you can optionally provide =path= which will tell Prodigy the path of the binary to run. Both of these services define their own =ready-message= since they're unique compared to the rest of the services. Then finally we just add the list of tags.
+
+A few additional options not in my examples are:
+
+- =:env= to add environment variables as needed to the command. ex. =:env '(("ENV_VARIABLE" "value"))=
+- =:stop-signal= the type "kill signal" to send the process to stop it. I haven't needed to do this myself, so I'm not 100% sure how it works.
+- =:kill-process-buffer-on-stop= which will kill the log output buffers completely when the service is stopped. By default, they persist for an entire emacs session unless killed manually.
+
+Check out the projects [[https://github.com/rejeep/prodigy.el?tab=readme-ov-file#usage][README]] for more in depth options than what's provided here.
+
+Here's an exact play-by-play of all the commands I use and how I do this everytime I want to spin things up at work.
+<details>
+<summary>Play-by-play</summary>
+
+Since I use doom-emacs as my base distribution, YMMV on some of the keybindings here but:
+
+1. =SPC r s= - runs =(prodigy)= which opens buffer
+2. =i t= - runs =(prodigy-add-tag-filter)=
+3. Type =wo= - fills in completing read for "work" tag.
+4. =RET= - applies the filter
+5. =M= - runs =(prodigy-mark-all)=
+6. =s= - runs =(prodigy-start)=
+7. Wait for a bit for all them to spin up
+8. Begin work...
+</details>
+
+<br />
+That's the intro to Prodigy and managing local services with it. If you're interested in a few things on my todo-list to implement for myself for your own inspiration read on...
+
+** Future Customizations
+
+- Modeline integration
+  - Place the number of running services for a project or with a specific tag output in the modeline. I'd also like to map this to =projectile-project-root= and a =tag= so as I'm switching projects or repositories, I can keep a birds eye view of the services running at a glance in the modeline.
+  - Utilize =prodigy-output-filters= to either alert me or dump a message in the modeline so I can easily be notified of exceptions being raised in the log output of a particular buffer.
+- Additional macro-esque keybindings
+  - Whenever I switch branches, I'd like to run one keybinding to kill all services running, run a sync command for the project, and then re-start all the services for a project with some message output or a =compilation-mode= style "logging."
+- Dynamically create Prodigy services from Procfile entires and/or conventional rails, yarn, or npm commands based on the project.
+
+* DONE Finding an Emacs Bug :emacs:bugs:comint:@emacs:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: emacs-comint-filter-bug
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2024-01-02
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "I managed to come across an emacs bug.. or rather unexpected & undocumented behavior."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+I was recently working on a porcelain for local database management in Emacs, =tablemacs= (name tbd). The general idea here is to give a magit style interface for interacting with a local database. This mode is built off =SQLi= (sql-interactive-mode) and uses a hidden =comint= buffer to execute commands. Everything was working great till I encountered a really weird issue. Let me preface everything with, I'm still *very* new to elisp and am still very much a beginner. Not only is it a radically different language than what I'm used to, the paradigms are also just very unique to emacs. If some of the code here looks wrong, it's a mistake in translation as some of it was modified for ease of understanding.
+
+** The process & the Issue
+Right now =tablemacs= creates a hidden =comint= buffer with =sql-interactive-mode= engaged. I then use =comint-redirect-send-command-to-process= which redirects the output of a comint command to an aribtrary buffer, which is my =tablemacs-status= buffer.
+
+#+begin_quote
+(comint-redirect-send-command-to-process COMMAND OUTPUT-BUFFER PROCESS ECHO &optional NO-DISPLAY)
+
+Documentation
+
+Send COMMAND to PROCESS, with output to OUTPUT-BUFFER.
+With prefix arg, echo output in process buffer.
+If NO-DISPLAY is non-nil, do not show the output buffer.
+#+end_quote
+
+This works as you'd expect however, there's some artifacts in the output. Here's what I get for my =show-tables= command which just runs =show tables;=:
+
+#+begin_src shell
+show tables;^ M
++--------------------------+^ M
+| Tables_in_tablemacs_test |
++--------------------------+^ M
+| test_table               |^ M
++--------------------------+^ M
+#+end_src
+
+All those =^M=s means it's displaying the carriage returns in the redirected buffer. Obviously, I wanted to remove those.
+
+I searched around for something that could help and I had already known about comint filters. These allow you to run filter functions on the strings as they or after they've interacted with the comint buffer. Here's a non-comprehensive list of a few of the available "filters" list variables you can add filter functions too:
+
+- comint-input-filter-functions
+- comint-output-filter-functions
+- comint-preoutput-filter-functions
+- comint-redirect-filter-functions
+- comint-redirect-original-filter-function
+
+There's a few more but those are the ones that were interesting to me in this situation. [[http://doc.endlessparentheses.com/Var/comint-redirect-filter-functions.html][Looking at the documentation]], =comint-redirect-filter-functions= seemed perfect.
+
+#+begin_quote
+List of functions to call before inserting redirected process output.
+Each function gets one argument, a string containing the text received
+from the subprocess. It should return the string to insert, perhaps
+the same string that was received, or perhaps a modified or transformed
+string.
+
+The functions on the list are called sequentially, and each one is given
+the string returned by the previous one. The string returned by the
+last function is the text that is actually inserted in the redirection buffer.
+
+You can use `add-hook' to add functions to this list
+either globally or locally.
+#+end_quote
+
+Seems ok so far! So I plugged it in with:
+
+#+begin_src emacs-lisp
+(add-hook 'tablemacs-minor-mode-hook (lambda () (push 'comint-strip-ctrl-m comint-redirect-filter-functions) ))
+#+end_src
+
+*It did not work.*
+
+** Investigation
+
+I then moved to setting the =comint-redirect-filter-functions= globally and still it did not work. I thought surely I was doing something wrong, but when I used =describe-variable= on =comint-redirect-filter-functions= it appeared to have =comint-strip-ctrl-m= as it should. I'm still a beginner when it comes to elisp so I thought I was doing something wrong. So I wrote my own filter just to see:
+
+#+begin_src emacs-lisp
+(defun tablemacs--comint-strip-ctrl-m-test (str)
+  "test filter"
+  (message "ran filter!")
+  str)
+#+end_src
+
+Low and behold I got the message in my minibuffer. So what gives?
+
+Well the next thing to do was to look at =describe-function= for =comint-strip-ctrl-m= which is as follows:
+
+#+begin_src emacs-lisp
+(defun comint-strip-ctrl-m (&optional _string interactive)
+  "Strip trailing `^M' characters from the current output group.
+This function could be on `comint-output-filter-functions' or bound to a key."
+  (interactive (list nil t))
+  (let ((process (get-buffer-process (current-buffer))))
+    (if (not process)
+        ;; This function may be used in
+        ;; `comint-output-filter-functions', and in that case, if
+        ;; there's no process, then we should do nothing.  If
+        ;; interactive, report an error.
+        (when interactive
+          (error "No process in the current buffer"))
+      (let ((pmark (process-mark process)))
+        (save-excursion
+          (condition-case nil
+	      (goto-char
+	       (if interactive
+	           comint-last-input-end comint-last-output-start))
+	    (error nil))
+          (while (re-search-forward "\r+$" pmark t)
+	    (replace-match "" t t)))))))
+#+end_src
+
+Herein lies the culprit. This filter takes in an =&optional _string= and usually, variables prefixed with =_= means they aren't used. So if it's not using the passed in string, what's it doing? Well it's using =(get-buffer-process (current-buffer))= and then marking where the process command output starts and then searching through with =(research-forward "\r+$" pmark t)= which is what actually replaces the carriage returns. The big red flag here is that it's using the =(current-buffer)= which, in my use case, isn't the buffer that the process is running in, instead its my porcelein buffer.
+
+So the issue turned out to be the implementation of =comint-strip-ctrl-m= and not the way I was using it.
+
+** What to do next?
+
+It's pretty clear to me that the function of `comint-strip-ctrl-m` doesn't match the documentation. Emacs documentation is /exceptional/ compared to anything else I've used, I mean it's known as the "self documenting text editor" for a reason. However, this is a very specific case where the documentation, or expected implicit behavior derrived from the documentation, doesn't line up with reality. So what should I do?
+
+*** My fix
+In my code, I just wrote my own filter to do exactly =comint-strip-ctrl-m= should do. It looks like this:
+
+#+begin_src emacs-lisp
+(defun tablemacs--comint-strip-ctrl-m (str)
+  "Filter function to remove carriage returns from comint output
+   This is needed because one provided by comint rely's on `current-buffer`
+   to get the process and it's always going to be wrong."
+  (replace-regexp-in-string "\r" "" str))
+#+end_src
+
+So this now works with =comint-redirect-filter-functions= as expected.
+
+#+begin_src shell
+show tables;
++--------------------------+
+| Tables_in_tablemacs_test |
++--------------------------+
+| test_table               |
++--------------------------+
+#+end_src
+
+*** Emacs bug report?
+
+At this point I'm considering filing a report, or at least a request to update the documentation for this rather specific small bug. It's not like this is a huge breaking bug for most users, and it's a pretty specific use case. But this might open up a potential contribution opporunity or at least a way to get involved with the emacs maintainer community at least a little bit. Possible fixes could consist of one of the following:
+
+1. Updating the documentation for =comint-strip-ctrl-m= to explictely state it uses =current-buffer= instead of just the passed in string.
+2. Updating =comint-strip-ctrl-m= to actually use the string it's passed and perform the same string editing functions.
+3. Creating a new =comint-strip-ctrl-m-filter= (name TBD?) which takes in a string, modifies it and returns a modified string.
+
+I don't know. Maybe someone will let me know if this is in fact an issue or if I'm just missing something else important.
+
+Happy Hacking.
+
+* DONE State Design Pattern :rails:programming:OOP:@development:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: state-design-pattern
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-06-08
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "State Design Pattern is often overlooked in favor State Machines when it comes to Rails and object state management. However, the State Design Pattern is a highly effective open/closed solution to many state design woes."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+Manging the state of objects and state specific behavior is always an interesting problem to deal with. The Rails community has done a great job of developing libraries to help manage this. Most of these libraries come in the form of State Machines. These typically have the pattern of defining states, events to change states, and constraints by which those states can or cannot change. Usually, this code is maintained in your model, and in some cases states can have their very own model and DB table and keep an audit history of some kind.
+
+** The Problem
+A lot of state machines require code to be placed directly in the model and have mechanisms by which side effects can be called. With a complex state machine, or a state machine that evolves over time, this can create a lot of odd behavior and weird dependencies on side effects at each transition. This quickly becomes hard to troubleshoot and hard to test and (even worse) can also result in transition events that only fire in order to fire their side effects or "reset" the state because of an error that occurred down stream. For a simple state management use case that has a consistent set of linear flows and minimal side effects, a state machine would probably be a good fit. However, when things grow beyond that, or when mulitple objects are having to interact as a result of the state transitions we need to look for something more robust, easily extensible, and that follows good object oriented design principals: The State Design Pattern.
+
+*Side Note*
+I highly recommend picking up a copy of Design Patterns: Elements of Resuable Object Oriented Software as these patterns are rather timeless and the material is easily referenceable.
+
+** State Design Pattern
+[[file:state-design-pattern/uml.png]]
+
+*** Overview
+The State Design pattern that at it's core allows you to manage your objects state specific behavior in a state object concrete class. This concrete class inherits from an abstract super class that defines the public interface, which acts as your contract to the outside world. In Rails, all of this can be confined into a concern to share this behavior with other objects if necessary. For now though, lets look at at a simple example implementation with just plain old Ruby.
+
+Here we have a Post object. It has an id and content and when the object is initialized it's always initialized by being in a =draft= state.
+
+#+begin_src ruby
+class Post
+  attr_accessor :id, :content
+
+  def initialize(id, content)
+    @id = id
+    @content = content
+  end
+
+  def post_to_socials
+    puts "Posted to social accounts!"
+  end
+end
+#+end_src
+
+We have not defined any state behavior yet, just building the foundation for the example so the rest is easy to follow.
+
+The state design pattern typically starts off with an abstract class that defines the proper interface that every subclass, concrete state object, has to implement.
+
+#+begin_src ruby
+class State
+  attr_reader :context
+
+  def initialize(context)
+    @context = context
+  end
+
+  def unpublish
+    raise NotImplementedError
+  end
+
+  def current_state
+    raise NotImplementedError
+  end
+
+  def publish
+    raise NotImplementedError
+  end
+
+  def archive
+    raise NotImplementedError
+  end
+
+  def log_state(state)
+    puts "Transitioning from: #{context.state.current_state} to: #{state}"
+  end
+end
+#+end_src
+
+The =@context= variable is set to the current object implementing this state, so in this case a `Post`. It allows us to make object specific method calls as we need and update the object attributes as transitions happen. This is also were any global behavior that happens among ALL states can be placed. It's important to note, that if you do want to implement some kind of global validation or side effect (like logging), that every single child class implements that behavior. It would be unwise to use conditionals to determine whether or not to call a side effect or validation in the super class, even if 5 out of 6 of your child classes need it. Prefer duplication over the wrong abstrction ;).
+
+Up next we have the concrete state classes. These can be anything but they should inherit from the abstract =State= class.
+
+#+begin_src ruby
+class DraftState < State
+  def current_state
+    "draft"
+  end
+
+  def unpublish
+    raise StandardError "Cannot unpublish post in draft state."
+  end
+
+  def publish
+    post_to_socials
+    log_state("published")
+    context.state = PublishedState.new(context)
+  end
+
+  def archive
+    log_state("archived")
+    context.state = ArchivedState.new(context)
+  end
+
+  private
+
+  def post_to_socials
+    context.post_to_socials
+  end
+end
+
+class PublishedState < State
+  def current_state
+    'published'
+  end
+
+  def unpublish
+    log_state("unpublished")
+    context.state = DraftState.new(context)
+  end
+
+  def publish
+    raise StandardError "Cannot publish already published post!"
+  end
+
+  def archive
+    log_state("archived")
+    context.state = ArchivedState.new(context)
+  end
+end
+
+class ArchivedState < State
+  def current_state
+    'archived'
+  end
+
+  def unpublish
+    log_state("unpublished")
+    context.state = DraftState.new(context)
+  end
+
+  def publish
+    log_state("published")
+    context.state = PublishedState.new(context)
+  end
+
+  def archive
+    raise StandardError "Cannot archive already archived post!"
+  end
+end
+#+end_src
+
+Now we can see the full power of this state design pattern. Every state is it's own object implementing every method from it's super class. Each one controls it's transition to the next state and calls any and all side effects necesssary to the transtiion of each state.
+
+In =DraftState#publish= we fire off the =post_to_socials= side effect. Lets say this method fails, and our domain requires this to succeed before publishing. Well here we can implement that fairly easily.
+
+#+begin_src ruby
+def publish
+  # draftState.rb
+  post_to_socials
+  log_state("published")
+  context.state = PublishedState.new(context)
+  rescue SocialPoster::Error # completely arbitrary error class
+    log_state("unpublished")
+  end
+end
+#+end_src
+
+This will prevent a state update from happening when the necessary behavior has not taken place.
+
+Ok now lets actually make this behavior accessible to the Post object. This will use delegation in order to preserve an easy predictable API for changing states.
+
+#+begin_src ruby
+class Post
+  attr_accessor :id, :content, :state
+
+  def initialize(id, content)
+    @id = id
+    @content = content
+    @state = DraftState.new(self) # Initial state
+  end
+
+  # Delegated
+  def current_state
+    @state.current_state
+  end
+
+  # Delegated
+  def publish
+    @state.publish
+  end
+
+  # Delegated
+  def archive
+    @state.archive
+  end
+
+  def post_to_socials
+    puts "Posted to social accounts!"
+  end
+end
+#+end_src
+
+As you can see, this is simply delegating any and all state calls to the relevant state object.
+
+*** Importance of this pattern
+This implementation is very /Open/Closed/ meaning, it's *open for extenstion* and *closed to modification*. This is the O in [[https://www.digitalocean.com/community/conceptual_articles/s-o-l-i-d-the-first-five-principles-of-object-oriented-design][SOLID]]. This allows us to extend it's behavior without modifying existing behavior which is a powerful tool in software development and a core principal of OOP. At any point, adding a new state is just adding a couple methods and creating the state object you'd wish to implement and that's it. This is personally why I prefer to use this type of pattern over a state machine.
+
+State machines, if not planned and maintained well easily get out of hand. They tend to have to handle a multitude of things that can make coupling code too easy. Typically they can handle before & after transition side effects, guards to prevent state transition happening, etc. This can introduce some confusion into your code as corners are inevitably cut due to business needs. This also means that testing each transtion requires the instantiation of the object implementing and following it through each individual transition. Testing with the state design pattern instead gives a great entrypoint to just testing the individual objects, allowing you to have confidence your state machine is working just as you intended. This is also good for complex state machines, where you have dependencies on the state of other objects, or you need mulitple objects to implement this same exact state machine. This can be easily abstracted and states can be predetermiend by a value and a method to set itself.
+
+All in all my focus on writing good OOP code has revealed a lot of interesting things I take for granted in the Ruby community. State machines were definitely something I never realized could be simplified into smaller objects like this and now that I have, I can't think of a scenario where I would use a state machine unless the state transitions were finite, well defined, and dependencies were kept to a minimum, even so I might elect for this pattern by virtue of it's testability alone.
+
+* DONE Double Polymorphic Associations in Rails :rails:programming:@development:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: double-polymorphic-associations
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-05-31
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "A quick overview of using associations to define good domain descriptions as well as good behavior."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+Polymorphic associations is a common theme among many applications. Things can get complicated, especially as far as naming is concerned, when you consider having a double polymorphic association. Rails provides all the necessary mechanisms by which to manage this in a way that makes sense for most business needs as well as leaving it readable for future programmers that come by in the future.
+
+#+begin_quote
+In programming languages and type theory, polymorphism is the provision of a single interface to entities of different types or the use of a single symbol to represent multiple different types.
+#+end_quote
+
+The example we'll work with today is one taken from some work I recently did helping to implement a Favorites feature. The requirements for this were:
+- A =User= can have many favorites, which can be a =Report= or a =Team=
+- A =Team= can have many favorites, which can be a =Report=
+
+This is what I mean by a double polymorphic relationship. One side, /favoritor/, can be one of a =User= or =Team= while the other side, the /favouritee/, can be of the type =Team= or =Report=. The requirements lended itself to building a =Favoritings= table and using that as our base. This would have a =favoritor= and =favoritee= polymorphic columns, which with Rails and ActiveRecord automatically include the =id= and =type= of each of those. This is what the migration looked like:
+
+#+begin_src ruby
+class CreateFavoritings < ActiveRecord::Migration[6.1]
+  def change
+    create_table(:favoritings) do |t|
+      t.references(:favoritee, polymorphic: true, index: true)
+      t.references(:favoritor, polymorphic: true, index: true)
+      t.timestamps
+    end
+  end
+end
+#+end_src
+
+So now comes time to develop the actual relationships to the other models. This is /complicated/ to a degree but you have to consider how your domain is laid out in order to define these relationships as they're needed. For one a Team can have many favourites and a User can have many favourites. Lets solve that first.
+
+#+begin_src ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  has_many :favorites, class_name: 'Favoriting', foreign_key: :favoritor_id, as: :favoritor
+end
+#+end_src
+
+While the name of the relationship isn't exact to the model, the domain name of =favorites= makes total sense. A User has many favorites. We then go onto define what the class name is since we're not explicitely using the =Favoritings= class name. Then we have to tell it the key this relationship uses on that model, as well as the type. A =User= has many =favorites= of class =Favoritings= based on the foreign key =favoritor_id= as the type of =favoritor=. This makes a well understood API for querying later: =User.find(1).favourites= will yield all the favourites. You could also get more specific with:
+
+#+begin_src ruby
+  has_many :favorite_teams, class_name: 'Favoriting', foreign_key: :favoritor_id, as: :favoritor, source_type: 'Team'
+#+end_src
+
+This not only defines the relationship more explicitely to the individual type but also builds the query via a join instead of having to call another query to scope it down after the fact. One of the many optimizations ActiveRecord can supply us.
+
+Now lets implement the other side: =Teams= as a favoriting.
+#+begin_src ruby
+# app/models/team.rb
+class Team < ApplicationRecord
+  has_many :favoritings, as: :favoritee
+  has_many :user_favoritors, through: :favoritings, source: :favoritor, source_type: 'User'
+end
+#+end_src
+
+The first relationship says a =Team= has many =favouritings= as the =favouritee=. So this model can be "favorited." Next we have a =Team= has many =user_favoritors= through =Favoritings= model which are of the type =Users= and the key/type is =favoritor=. This will pull all the users that have favorited this team. Just like earlier this allows ActiveRecord to optimize queries for these early on instead of running mulitple or having to manage scopes. This also provides a very readable API for developers down the road.
+
+This is half the aforementioned implementation but it describes the principal enough. Rails and ApplicationRecord provides a great and flexible interface for explicitely defining these types of complex relationships that all flow through the same model.
+
+* DONE Using SSH Tunneling :@networking:networking:ssh:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: ssh-tunneling
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-03-01
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Use SSH Dynamic Port Forwarding/Tunnel to route web traffic."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+Recently, I needed to figure out how to route /some/ internet traffic through another computer to access a private network. Dynamic port forwarding with SSH seemed to be the best solution for this type of thing. I don't know enough about SSH so this was a good place to dig in a little deeper and learn a few things. Once the tunnel was setup I decided to utilize Firefox's profiles feature in order to setup a SOCKS Proxy and ensure that only the web traffic I wanted was routed through the SSH tunnel.
+
+** Setup
+I setup this tunnel in a rather simple way. Here's the man page entries for the relevant flags I used, =-D=, =-n=, and =-f=.
+
+#+begin_quote
+ -D [bind_address:]port
+ Specifies a local "dynamic" application-level port forwarding.  This works by allocating a socket to listen to port on the local side, optionally bound to the specified bind_address.  Whenever a connection is made to this port, the connection is forwarded over the secure channel, and the application protocol is then used to determine where to connect to from the remote machine.  Currently the SOCKS4 and SOCKS5 protocols are supported, and ssh will act as a SOCKS server.  Only root can forward privileged ports.  Dynamic port forwardings can also be specified in the configuration file.
+
+ -f
+ Requests ssh to go to background just before command execution.  This is useful if ssh is going to ask for passwords or passphrases, but the user wants it in the background.  This implies -n.  The recommended way to start X11 programs at a remote site is with something like ssh -f host xterm. If the ExitOnForwardFailure configuration option is set to “yes”, then a client started with -f will wait for all remote port forwards to be successfully established before placing itself in the background.
+
+ -n
+ Redirects stdin from /dev/null (actually, prevents reading from stdin).  This must be used when ssh is run in the background.  A common trick is to use this to run X11 programs on a remote machine.  For example, ssh -n shadows.cs.hut.fi emacs & will start an emacs on shadows.cs.hut.fi, and the X11 connection will be automatically forwarded over an encrypted channel.  The ssh program will be put in the background.  (This does not work if ssh needs to ask for a password or passphrase; see also the -f option.)
+#+end_quote
+
+** Configuration
+#+begin_src bash
+ssh [USER]@[IP_ADDR] -D [PORT] -N -f
+
+# Useful alias
+alias my_ssh_tunnel="ssh [USER]@[IP_ADDR] -D [PORT] -N -f"
+#+end_src
+
+As explained above in the documentation, the =-f= flag is the nifty one as that makes the connection and runs it in the background, but leaves open responses to ensure you can type in an ssh password if you need to. This is better than using the =[COMMAND] &= shortcut.
+
+With that complete you can now navigate to `about:profiles` in Firefox and create a new one, launch it, and configure your network settings in it to use:
+- Manual Proxy Configuration
+- Input =127.0.0.1= and the specified =[PORT]= from the command
+- Select SOCKS v5
+- Enable Proxy DNS using SOCKS v5 and disable use DNS over HTTPs (if configured)
+
+Now, only that profile will have it's web traffic routed through the SSH tunnel. Your regular profile will be directly connected. That's it!
+
+** Launching Firefox
+You can now launch Firefox pretty easily by using =firefox -P [PROFILE] &=. Make sure you configure your default profile as you want to ensure you don't send unnecessary traffic through the proxy.
+
+* DONE Trying out GCC Emacs :@emacs:emacs:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: trying-gcc-emacs
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-02-20
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "I've always had complaints about emacs performance but the latest native compilation branch squashes any concerns I have with it."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+I love Emacs. I've been using it since late 2017 and have had an on and off again relationship with it. It's a great tool for anyone who likes to tinker around with software. Like any relationship, there are some pain points I have that consistently want to push me away from Emacs, one of which is performance.
+
+I've used [[https://github.com/hlissner/doom-emacs][Doom Emacs]] for a really long time and hlissner has done an incredible job of building a fantastic configuration setup, and compared to other configuration frameworks I've used, Doom is the most performant and most versatile. That being said, no matter how much optimization is done on the configuration side, Emacs can still be extremely slow, especially compared to it's Vim counterpart.
+
+** Cue GCC Emacs
+GCC Emacs is a branch of the main Emacs repository that uses [[https://gcc.gnu.org/onlinedocs/jit/index.html][libgccjit]], a pseudo-JIT compiler which compiles elisp to native code. You can see all updates from the author [[http://akrl.sdf.org/gccemacs.html][here]] and try to understand exactly what's happening. This provides an exceptionally large performance boost in everything Emacs does from startup time to normal day-to-day work. It also appears to help manage the amount of C code that needs to be written in the underlying Emacs engines. See the [[https://www.emacswiki.org/emacs/GccEmacs][Emacs Wiki]] for more info on how it works and more detailed instructions than what I'm about to give.
+
+** Get up and running
+I've run this on Arch linux only so far so here are the steps I followed in order to get it running. [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][Here's the build documentation]] for more information on the flags used to configure and compile. Some used here can be omitted if you don't want them.
+
+#+begin_quote
+Note: I highly advise against using the AUR package for GCC Emacs and instead just bulid it yourself
+#+end_quote
+
+#+begin_src shell
+# Install libgccjit: https://aur.archlinux.org/packages/libgccjit/
+$ yay -S libgccjit
+
+# Install CMake (required for VTerm. Ignore if you want)
+$ sudo pacman -S cmake
+
+# Clone Emacs repo and checkout `feature/native-comp`
+$ git clone git://git.savannah.gnu.org/emacs.git -b feature/native-comp
+$ cd emacs
+
+# Build
+$ ./autogen.sh
+$ ./configure --with-nativecomp --with-dbus --with-gif --with-png --with-jpeg --with-libsystemd --with-rsvg --with-modules
+$ make -j$(nproc)
+#+end_src
+
+At this point you can run =./src/emacs= in the emacs directory and viola. It should start up pretty fast. At first I renamed my =.emacs.d= folder just so I could load up vanilla Emacs and test things out. If you want to use Doom like I am and/or use GCC Emacs fulltime, keep reading.
+
+At this point I recommend you uninstall the normal Emacs version if you have it installed and then you can install this package proper.
+
+#+begin_src shell
+# Remove Emacs (optional)
+$ sudo pacman -R emacs
+
+# In Emacs directory
+$ make install
+#+end_src
+
+The emacs binary you reference should work just as intended. Now for Doom things are quite simple. If you changed the =.emacs.d= directory go ahead and change it back. You'll then want to run =./emacs.d/bin/doom upgrade= which will ensure you have the latest pinned commits of packages for increased chances of stability and build the packages as required.
+
+*Warning*: This can take quite a while.
+
+** It's fast
+It's been exceptionally fast for me. I also am using VTerm when I need to do anything in the terminal while working on something and it's a lot faster than in the standard release as well.
+
+Cheers.
+
+* DONE Thoughts on Interfaces for Models :design:architecture:@development:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: thoughts-on-interfaces
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-02-11
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "After making small changes to a model, it got me thinking hard about how I build interfaces."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+I recently had to build an interesting model that stored values for a JWT in order to implement an allow list style revocation strategy. After some feedback from another developer it became clear the interface for that model needed to be optimized. Here's a quick description of the "behavior" of that model:
+
+- All of the columns are read only after creation
+- It's dependent on a =User= record assocation - thus requires a validation
+- It has an expiration time that is also stored, but set to a pre-determined amount of time
+- It's =jti= column value is generated by the model itself since it is a "propietary" action per record
+
+Given this set of behavior we can infer that *since the =expires_at= column and =jti= are both self generated in the model code, the only attribute required for creation is the associated =User= record.*
+
+This made the code for the model drastically simpler and also gave me constraints to artificially impose on the model itself, preventing updates and making attributes read only.
+
+Rails provides a nifty way of doing these things but this principal can be used with any language/framework.
+
+#+begin_src ruby
+# Model Class Example
+class AllowListedToken < ApplicationRecord
+
+  # ...
+  attr_readonly :jti, :user_id, :expires_at # prevents update calls on these columns
+
+  EXPIRATION_TIME = 1.day.from_now
+
+  belongs_to :user
+
+  ## after_initialize is called when the object is created but before the `INSERT` is called
+  ## allowing for object transformations to take place before the record persists.
+  after_initialize :set_generated_values
+
+  # ...
+
+  private
+
+  def set_generated_values
+    self.jti = JtiGenerator.new.jti
+    self.expires_at = EXPIRATION_TIME
+  end
+end
+
+# Usage
+user = User.find(id)
+AllowListedToken.create!(user: user)
+#+end_src
+
+The moral of the story is to take time to consider how your model should behave and what limitations or defaults you can implement to ensure that the constraints you need to fulfill are fulfilled. This helps ensure the maintainability and simplicity of the model and helps to align the expectated behavior and usage.
+
+* DONE Using Run Command in Emacs for RSpec Watch Mode :emacs:tools:@emacs:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: run-command
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-02-02
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "I am a sucker for small micro-optimizations in my Emacs config. The Run Command package gives plenty of opportunity for that, while also building powerful automation opportunities. Here's the config I came up with for an RSpec watch mode."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+[[https://github.com/bard/emacs-run-command][Run Command]] is a really nifty Emacs package that abstracts away running arbitrary shell commands into a nice ivy or helm (or other completion frameworks) frontend. I saw a few of the examples and immediately got an idea for using it to build an RSpec watch mode. It's a tiny optimization to my work flow as re-running the test command is just a few keystrokes in of itself, but getting automated feedback means I get to focus on other things while writing tests.
+
+** The Config
+The config is rather simple and only requires a couple of things to be setup. The biggest dependency is on an external tool called `entr` which watches for file changes and will re-run a command if it detects a change.
+
+*** Requirements
+- Emacs
+  - =run-command= installed
+  - =projectile= installed
+- System
+  - =entr= installed
+
+*** Recipes
+Run Command is built on top of custom recipes you create in your config. These recipes define a list of similar functionality and each recipe is added to the recipe list =run-command-recipes=. Here is my recipe for RSpec:
+
+#+begin_src emacs-lisp
+(defun jd/shell-command-maybe (exe &optional paramstr)
+  "run executable EXE with PARAMSTR, or warn if EXE's not available; eg. (jd/shell-command-maybe \"ls\" \"-l -a\")"
+  (if (executable-find exe) t nil))
+
+(defun jd/get-current-line-number ()
+  "Gets current line number based on `(what-line)` output. I'm sure there's a better way to do this but it's what I got."
+  (car (last (split-string (what-line)))))
+
+(defun run-command-recipe-rspec ()
+  (list
+     (list
+      :command-name "RSpec Run File"
+      :command-line (format "bundle exec rspec %s" (buffer-file-name))
+      :working-dir (projectile-project-root)
+      :display "Run RSpec on file")
+     (list
+      :command-name "Rspec Run Single"
+      :command-line (format "bundle exec rspec %s:%s" (buffer-file-name) (jd/get-current-line-number))
+      :working-dir (projectile-project-root)
+      :display "Run RSpec on single block")
+   (when (jd/shell-command-maybe "entr")
+     (list
+      :command-name "RSpec File Watch Mode"
+      :command-line (format "find %s | entr -c bundle exec rspec %s" (buffer-file-name) (buffer-file-name))
+      :working-dir (projectile-project-root)
+      :display "Rerun rspec on file on save"))
+   (when (jd/shell-command-maybe "entr")
+     (list
+      :command-name "Rspec Block Watch Mode"
+      :command-line (format "find %s | entr -c bundle exec rspec %s:%s" (buffer-file-name) (buffer-file-name) (jd/get-current-line-number))
+      :working-dir (projectile-project-root)
+      :display "Rerun rspec on block on save"))))
+#+end_src
+
+The =run command-recipe-= name for the function is just a convention. That part of the name gets removed when run command lists your recipes. There's a couple of utility functions in there, namely =jd/shell-command-maybe= that is important. The implementation of the watch mode for RSpec requires that [[http://eradman.com/entrproject/][entr]] be installed on the system. I also thought it would be useful at some point in the future so I went ahead and abstracted it into my own namespaced function. If =entr= is not present on your machine the watch mode recipes will not be in the lists provided by run command during use. =jd/get-current-line-number= is also just a wrapper around =what-line= parsing. I'm sure there's a dedicated function to just get the number but I couldn't find it fast enough.
+
+This works pretty well and does what it's intended. It allows me to run a file or block in "watch mode" while I'm developing or just run the spec with a few simple commands. Running =M-x run-command= will kick start your completion framework (which is auto detected) with a list of all your recipes. I've bound it to =SPC r c=. =SPC r= has become my default keymap as it's not used by anything from what I can tell.
+
+*** Run Command Configuration
+According to the Run Commmand documentation it's recommended to use =M-x customize= command in order to add recipes to the list however, Doom Emacs does not support the =custom= interface, so I opted in to just set it manually:
+
+#+begin_src emacs-lisp
+(setq run-command-recipes
+      '(run-command-recipe-rspec))
+#+end_src
+
+** Ways to Improve
+There are a few things I can do to improve this configuration and make it work more broadly and more like =jest= works for javascript. Using =projectile-rails= to find the matching spec file would be a good way to use it to. So if I'm editing =app/models/user.rb= I could make RSpec run a specific spec in "watch" mode to make TDD a little quicker. If I do that I'll update this post with the relevant code to do so.
+
+** Conclusion
+I don't know A LOT of elisp but after troubleshooting and fumbling around, figuring it out was pretty fun. It's also yields a high reward as I get to use what I develop every day.
+
+* DONE Resolving client side routes in Rails :@development:ruby:rails:tips:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: client-routes-rails
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-01-09
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Tell Rails to pass routes to a client with a nifty helper."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+There's a quick and easy way to satisfy client side routing in a Rails application. Rails will automatically try to resolve it's routing on the server side and throw an immediate 404 if no valid pages exist. Since my main application at work is a React SPA I needed a way to resolve routes to the client and not let them get caught by the server and throw a 404. The =(/*path)= method route 'helper' allows through any route so it can then be handled elsewhere.
+
+#+begin_src ruby
+get '/app(/*path)', to: 'my_app#index'
+#+end_src
+
+So anytime you visit say =/app/123= the =/app= route will correctly be resolved to the =MyAppController#index= method and any other parameters will be left for you to parse and decide what to do with on the client side.
+
+You can optionally add =constraints= to ensure that the default Rails behavior kicks in if the route is in fact invalid.
+
+#+begin_src ruby
+get '/app(/*path)', to: 'my_app#index', constraints: {path: /(profile|home)\/.*/}
+#+end_src
+
+This makes =/app/home= and =/app/profile= completely valid, and passes Rails routing checks, but anything else like =/app/message= would be invalid to Rails and thus trigger the Rails server side 404 error.
+
+Using =constraints= is great if you have very simple routing, that doesn't use any dynamic arguments, like an =ID= but that's a very tight use case. Normally I'd recommend against this because you'll have to maintain your routes in 2 places, =routes.rb= and your client code. It's very easy to handle 404 errors with something like `react-router` so that would probably be more preferable long term.
+
+* DONE Dockerize Create React App :react:docker:@development:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: dockerizing-react
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2021-01-02
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "I'm relatively new to using Docker and wanted a quick way to spin up a small React application using Docker so I could easily share it as a proof of concept for features I develop at work. Here's a quick guide to dockerizing a React app made with create-react-app."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+I've used Docker quite a bit but I haven't really dived into configuring my own dockerized app. I recently needed to build a quick proof of concept with a React app and needed to share it easily without worrying too much about build dependencies or anything of the sort. So here's a quick guide on dockerizing an app created with create-react-app.
+
+** The guide
+
+I'll assume you already have a CRA app created. If you've never used create-react-app, I recommend checking out the docs [[https://reactjs.org/docs/create-a-new-react-app.html][here]]. This tutorial will work from the top down and both the =Dockerfile= and =docker-compose.yml= files will be at the end in full.
+
+Create a =Dockerfile= at the root of your application. First we need to figure out what base image we're going to use. I'm biased towards the Alpine based ones cause those are lite and quick to spin up. So we'll use =node:current-alpine3.10=. This tells Docker to pull the current alpine 3.10 image from Dockerhub.
+
+#+begin_src dockerfile
+FROM node:current-alpine3.10
+#+end_src
+
+Next we'll need to set the working directory, where the app will be "put", dependencies will be installed in, and our run command to run.
+
+#+begin_src dockerfile
+WORKDIR /app
+#+end_src
+
+
+We'll setup the =PATH= to ensure that the `node_module` binaries are accessible globally.
+#+begin_src dockerfile
+ENV PATH /app/node_modules/.bin:$PATH
+#+end_src
+
+Next is probably the part that confused me the most when working with Docker. We have to copy over critical files to ensure that the container knows where to get our dependencies and how to build them all. This step needs to be done explicitely and not make use of a volume due to the fact that it'll overwrite dependencies if you're not careful.
+
+#+begin_src dockerfile
+COPY package.json ./
+COPY yarn.lock ./
+#+end_src
+
+This ensure that just the dependency and depenency lock file are both available to the container. We /could/ just copy over the =node_modules= folder from our local machine into the container, but it's likely that something will break cause sometimes certain modules are built differently for different targets.
+
+Next we'll tell the container to install the dependencies.
+#+begin_src dockerfile
+RUN yarn install
+#+end_src
+
+Finally we'll tell the container to execute our build/run command. This command is important cuase it represents the "main" process for our image which is why this is =CMD= instead of =RUN=.
+
+#+begin_src dockerfile
+CMD ["yarn", "start"]
+#+end_src
+
+Before we move on we'll need to go ahead and setup the =docker-compose.yml= and =.dockerignore= files to ensure everything runs as inteneded. The convience of docker-compose is that you don't have to pass 100 args to the Docker CLI.
+
+Lets setup the =.dockerignore= first.
+#+begin_src dockerignore
+node_modules
+build
+.dockerignore
+Dockerfile
+#+end_src
+
+This ensures that Docker doesn't use the node_modules or =build= directory in the volume we create in the =docker-compose.yml=. Not ignoring the =node_modules= directory will result in our previously installed dependencies being overwritten by what's on our local machine. So lets make sure the container uses the dependencies it has.
+
+Ok now for the last bit, the docker-compose file. Here we declare a version, the service/container_name and then pass the actual configuration. We need to tell docker to use the current directory as it's main "context" and subsequently use the Dockerfile in that directory.
+
+#+begin_src yaml
+version: '3.3'
+
+services:
+  wc-concept:
+    container_name: wc-auth-concept
+    build:
+      context: .
+      dockerfile: Dockerfile
+#+end_src
+
+Now we have to define Volumes. Volumes can be used for persistant reference between Docker container builds. Since each container is meant to be spun up and destroyed with no lingering side effects, volumes represent a way to tell Docker about persistant information. This can be a database file or in our case, the code. This tells docker to reference the code in =.= which is our local project directory as the code in =/app= which is the directory of the application code in the container. We also add a node_modules volume to ensure we don't have to constantly download them whenever the container spins up.
+
+#+begin_src yaml
+version: '3.3'
+
+services:
+  wc-concept:
+    container_name: wc-auth-concept
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    ports:
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+#+end_src
+
+There's 2 more things in the above example. First we define the port to expose out of the container and forward it to a port on our local machine. My project runs on =3000= by default, which is what Docker knows about. We'll expose port =3000= from the container and forward it to port =3001= on our local machine. The format is =local_port:container_port=. Finally we tell Docker to poll the volumes for changes so we can take advantage of =webpack-dev-server= or hot reloading.
+
+Now you can just run =docker-compose up=, with the optional =-d= flag which is "detached" mode and it will run in the background instead of outputting to the terminal, and visit =localhost:3001=.
+
+Here's all the code for all 3 files in one place for reference.
+
+*Dockerfile*
+#+begin_src dockerfile
+FROM node:current-alpine3.10
+
+WORKDIR /app
+
+ENV PATH /app/node_modules/.bin:$PATH
+
+COPY package.json ./
+COPY yarn.lock ./
+
+RUN yarn install
+
+CMD ["yarn", "start"]
+#+end_src
+
+*.dockerignore*
+#+begin_src dockerignore
+node_modules
+build
+.dockerignore
+Dockerfile
+#+end_src
+
+*docker-compose.yml*
+#+begin_src yaml
+version: '3.3'
+
+services:
+  wc-concept:
+    container_name: wc-auth-concept
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    ports:
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+#+end_src
+
+This worked just fine for my purposes. I'm sure there's more to be done to make this Docker configuration way more robust. Enjoy.
+
+* DONE Organizing Work is Hard :@career:soft_skills:
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: organizing-work
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2019-11-27
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Taking on organizational responsibility for other developers work is hard work in of itself. It is a careful balance of planning, architecture, and confidence."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+As an engineering team grows it becomes imparitive that the leadership among that team grows to scale as well. We all know that organizing work on a product is difficult, but the organization of the engineering team specifically plays the most significant role in the overall developer experience. My personal experience up till this point has been to work mostly on projects or features either by myself or with a single other more senior developer. Over the last quarter I was given the temporary title of technical lead on a project with 4 other developers, which presented an extremely difficult learning opportunity for me.
+
+My time as a developer has been marked by taking on research or projects on my own. I spent a good three months managing a set of contractors and then embarked on mostly solo projects. Organizing work for fully integrated team waa something completely foreign to me. This write up simply serves as a way to help solidfy some of what I learned and hopefully help other people in similar situations.
+
+** Theorizing Architecture is a Skill
+
+The project I undertook this quarter was not a large full stack architectural effort, instead, it focused mainly on the frontend (React) of our application. We try to be very intentional about how we build components and UI elements to ensure that what needs to be reusable, can be, and that larger page or template type components recieve a quality composition focused structure for easy maintenance. This meant that embarking on a greenfield feature, required some forethought on how the different component API's would work together and how we would handle the required data to accomplish the overall goal of what we wanted to build.
+
+*Herein lies the challenge: coming up with an architectural plan and executing it over the course of weeks.*
+
+In the past, my tendency was to always do "proof-of-concepts" that would more often than not, just turn into the code that would actually be used. I never really had to decide on something prior to writing anything and just hoped that it would work. Fairly early on in the project, I had the "birds eye view" of how this whole feature could work. I took my "birds eye view" solution and organized the work as such. Our sprints, stages of completion, and deadlines were all built around my rough solution and tickets were broken down and written to accomodate small units of that very idea.
+
+This resulted in a large amount of insecurity in how I was leading the team. Why? I didn't really focus on building a complete, very thorough plan, I just maintained my own rough idea. Four developers working through a plan really puts to the test the quality of the plan and ultimately the experience those developers have while executing it. When areas came up that I had inevitably overlooked, we had to make pivots, or have short pairing sessions to help determine the most optimal solution to whatever it was. Pivots to some degree are inevitable in building software, however, these seemed very avoidable as if one or two more hours of thinking would have surfaced these gaps at the beginning.
+
+This, at least in part, is what I think helps to define a good senior developer, who not only advocates for quality practices, but also for a good experience for all the developers working around them. Their ability to come up with a detailed plan, minimizing the risk of pivots during a project, and having a framework for dealing with those situations will ensure that the developers working along side them have the best experience possible. Great experiences like this, free up developers to come up with more innovative solutions or to collaborate more on an idea to make things better for the long term.
+
+My biggest take away from this was to spend more time planning out how something was to be built do my best proving out examples of the more complex bits and pieces of the code to help deter unknowns.
+
+** Define Success & Failure Early
+
+I think there comes a point in a lot of software companies where data becomes a huge contributor to the products over all direction. Once a business establishes itself it begins the process of making everything better and understanding it's users is finer detail. This very quickly builds the case for proper and established baselines as features are developed. The project we worked on was not large, but it had strong potential to either damage our user conversion/retention rates or improve them. We failed to really understand this potential early on, and failed to understand what "failing", or "success" for that matter, means. This wasn't any one persons fault, it was just a gap the entire team contributed to.
+
+It wasn't till about a month into the project that we began discussing a roll out plan. This lead to discussions of the "risks" involved in changing such a critical piece of our user experience. It was then that we began to dig into the data to try to understand that risk as much as possible. Getting to this point was a good thing and meant that the team was growing more mature, however, this realization came very late. It resulted in a fairly large pivot and a lot of time spent researching how to circumvent certain hurtles in the process.
+
+Understanding risks, impacts, and how things will be measured early ensures that development goes smoothly and the smallest units of work shippable can be completed quickly, in a quick agile-esque cycle. This also helps to guide the later stages of a project and gives you a steady framework for adjusting to pivots that arise during the development of a feature.
 
 * DONE Tips for Breaking into the Tech Industry :advice:@career:
 :PROPERTIES:
@@ -109,23 +1192,22 @@ In short, you can define a list of services in your configuration, and in turn, 
 :EXPORT_FILE_NAME: index
 :EXPORT_DATE: 2017-12-28
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "It took me a long time to find a job, so I thought I'd share my most useful advice on the matter. It's an uphill battle, but once you get the first one, the rest are easy."
-:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :cover '((image . "./image.url") (alt . "alt text") (caption . "caption") (relative . false) (hidden . true))
 :END:
 
 #+begin_quote
 This is a repost of my original 2017 blog post. It maybe a little outdated.
 #+end_quote
 
-I recently got my first developer job as a Quality Assurance Engineer at a company called [Modern Message](http://modernmsg.com) and I want to share a few tips on things I did to help me eventually land this job.
+I recently got my first developer job as a Quality Assurance Engineer at a company called [[http://modernmsg.com][Modern Message]] and I want to share a few tips on things I did to help me eventually land this job.
 
-I'm a student at [Bloc](http://bloc.io) which is a remote, self-paced developer bootcamp. I managed to pick their longest track called the Software Engineering Track.
+I'm a student at [[http://bloc.io][Bloc]] which is a remote, self-paced developer bootcamp. I managed to pick their longest track called the Software Engineering Track.
 
 ** It's a Numbers Game
 When I was searching for a job, I assumed 5% of my applications would result in a job. That's a conservative number I think, I don't even remember where I got that from, but it gave me a goal. So let's assume, that stat is correct.
 
 If 5% of your applications result in a job, lets say 20% actually call you after applying. This is great news. That's 20 out of 100 applications. That's 20 opportunities. If your working hard, just 1 of those opportunities is enough.
 
-While I'm sure that the actual stats are much different based on a very large number of factors, that stat still _is_ some number though, which means each application you send out, gets you one step closer to the employer that'll make you an offer. Keep this at the forfront of your mind, cause finding your first gig can be real up hill struggle. Just remember, each place you apply, increases your chances of getting an offer. It may seem basic, but it kept me going after sending out my 120th application.
+While I'm sure that the actual stats are much different based on a very large number of factors, that stat still /is/ some number though, which means each application you send out, gets you one step closer to the employer that'll make you an offer. Keep this at the forfront of your mind, cause finding your first gig can be real up hill struggle. Just remember, each place you apply, increases your chances of getting an offer. It may seem basic, but it kept me going after sending out my 120th application.
 
 ** The Industry
 There's a few things that I felt like companies were really looking for when it came to finding candidates to work for them:
@@ -136,7 +1218,7 @@ There's a few things that I felt like companies were really looking for when it 
 
 *** Industry Fit
 
-A business wants to know you're passionate about what you're doing. That you're keeping up with issues/news about the software industry. There's plenty of places to get this info like [HackerNews](https://news.ycombinator.com) or [Reddit](https://reddit.com/r/programming). You can easily see trends and see the focus of people in the industry to gauge better what you should be learning about and what you can talk about in interviews.
+A business wants to know you're passionate about what you're doing. That you're keeping up with issues/news about the software industry. There's plenty of places to get this info like [[https://news.ycombinator.com][HackerNews]] or [[https://reddit.com/r/programming][Reddit]]. You can easily see trends and see the focus of people in the industry to gauge better what you should be learning about and what you can talk about in interviews.
 
 ES6 was a new thing when I was hunting, so being able to at least discuss it, even at just a high level, benefitted me in a couple interviews.
 
@@ -189,7 +1271,7 @@ I did this to almost every person I met at Meet Ups.
 
 *Coffee*
 
-I asked about 8 developers for coffee in my job search. Through that I was able to get to know them, pick their brains and learn. Another engineer, Haseeb Qureshi has a great [blog](http://haseebq.com/how-to-break-into-tech-job-hunting-and-interviews/) on this whole topic, especially networking. If you're still reading this and not his blog (which is totally the wrong move by the way) here's what I did.
+I asked about 8 developers for coffee in my job search. Through that I was able to get to know them, pick their brains and learn. Another engineer, Haseeb Qureshi has a great [[http://haseebq.com/how-to-break-into-tech-job-hunting-and-interviews/][blog]] on this whole topic, especially networking. If you're still reading this and not his blog (which is totally the wrong move by the way) here's what I did.
 
 I went to a Meet Up and asked one of the obvious experienced engineers out for coffee. He was very kind and obliged. I paid, and got to sit down with him for almost 2 hours just picking his brain. At the end I asked, "I'm really trying to get a job as a developer using x technology, mostly right now I'm just trying to get to know people and learn from them. Do you have someone else you can reccommend I talk to?"
 
@@ -203,7 +1285,7 @@ There's a couple of things to practice when looking for developer job.
 
 *** Whiteboarding
 
-This is some what of a controversial subject. It's good to go into it with the mentaility of solving problems instead of actually coding. I did several whiteboarding interviews that involved dealing with collisions in hashes, implementing a method on a string like `.reverse`, and taking an algorithm and making it faster. All these are skills that can be practiced easily, but there's a method which will give you great results.
+This is some what of a controversial subject. It's good to go into it with the mentaility of solving problems instead of actually coding. I did several whiteboarding interviews that involved dealing with collisions in hashes, implementing a method on a string like =.reverse=, and taking an algorithm and making it faster. All these are skills that can be practiced easily, but there's a method which will give you great results.
 
 1. Find the problem
    a. CodeWars
@@ -215,7 +1297,7 @@ This is some what of a controversial subject. It's good to go into it with the m
    c. Explain your thought process and theory before writing one line of code.
 3. Code and explain the solution
 
-Using these steps will give you good practice for what whiteboarding is like. Most of the hiring managers I've spoken too, don't emphasize the right answer as much as being able to solve the problem and communicate the _idea_ behind the solution.
+Using these steps will give you good practice for what whiteboarding is like. Most of the hiring managers I've spoken too, don't emphasize the right answer as much as being able to solve the problem and communicate the /idea/ behind the solution.
 
 *** Answering Questions
 
