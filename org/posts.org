@@ -217,7 +217,7 @@ All in all, I probably spent a good 8 hours configuring Hugo and am already very
 
 [[https://github.com/rejeep/prodigy.el][Prodigy]] is an incredible tool of convenience for me. I've been slowly migrating my entire workflow into Emacs and Prodigy has become a staple in my day to day.
 
-## What is Prodigy?
+** What is Prodigy?
 
 #+begin_quote
 Manage external services from within Emacs
@@ -229,7 +229,7 @@ To get rid of this tedious work, I started working on this Emacs plugin, which p
 
 This has to be probably the most "Emacs user" solution to a problem I've ever heard.
 
-In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [[https://www.getzola.org/][zola]] and the command to start the server is =zola serve=. Instead of managing a terminal buffer or /worse/ switching to a terminal app I can define the following in my config:
+In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [[https://www.getzola.org/][zola]] and the command to start the server is =zola serve=. Instead of managing a terminal buffer or /worse/ switching to a terminal app I can define the following in my configuration:
 
 #+begin_src emacs-lisp
 (prodigy-define-service
@@ -365,14 +365,14 @@ Since I use doom-emacs as my base distribution, YMMV on some of the keybindings 
 <br />
 That's the intro to Prodigy and managing local services with it. If you're interested in a few things on my todo-list to implement for myself for your own inspiration read on...
 
-** Future Customizations
+** Future Customization
 
 - Modeline integration
   - Place the number of running services for a project or with a specific tag output in the modeline. I'd also like to map this to =projectile-project-root= and a =tag= so as I'm switching projects or repositories, I can keep a birds eye view of the services running at a glance in the modeline.
   - Utilize =prodigy-output-filters= to either alert me or dump a message in the modeline so I can easily be notified of exceptions being raised in the log output of a particular buffer.
 - Additional macro-esque keybindings
   - Whenever I switch branches, I'd like to run one keybinding to kill all services running, run a sync command for the project, and then re-start all the services for a project with some message output or a =compilation-mode= style "logging."
-- Dynamically create Prodigy services from Procfile entires and/or conventional rails, yarn, or npm commands based on the project.
+- Dynamically create Prodigy services from Procfile entries and/or conventional rails, yarn, or npm commands based on the project.
 
 * DONE Finding an Emacs Bug :emacs:bugs:comint:@emacs:
 :PROPERTIES:

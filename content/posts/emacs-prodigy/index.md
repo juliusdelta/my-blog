@@ -12,7 +12,8 @@ TocOpen: true
 
 [Prodigy](https://github.com/rejeep/prodigy.el) is an incredible tool of convenience for me. I've been slowly migrating my entire workflow into Emacs and Prodigy has become a staple in my day to day.
 
-\## What is Prodigy?
+
+## What is Prodigy? {#what-is-prodigy}
 
 > Manage external services from within Emacs
 > I came up with the idea when I got to work one Monday morning and before I could start working I had to manually start ten or so services.
@@ -22,7 +23,7 @@ TocOpen: true
 
 This has to be probably the most "Emacs user" solution to a problem I've ever heard.
 
-In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [zola](https://www.getzola.org/) and the command to start the server is `zola serve`. Instead of managing a terminal buffer or _worse_ switching to a terminal app I can define the following in my config:
+In short, you can define a list of services in your configuration, and in turn, are given a simple UI to manage those services. This site is currently built with [zola](https://www.getzola.org/) and the command to start the server is `zola serve`. Instead of managing a terminal buffer or _worse_ switching to a terminal app I can define the following in my configuration:
 
 ```emacs-lisp
 (prodigy-define-service
@@ -41,7 +42,7 @@ You can also very easily open a buffer with the log output for inspecting/debugg
 
 {{< figure src="prodigy-log.jpeg" >}}
 
-This interface takes a lot of inspiration from \`dired\` in that services can be marked and then acted upon in some way so you can start or stop multiple services at one time. In the UI, you can filter services by tags or name, which allows you to build groups of services really easily that pertain to a particular project. After filtering your defined services, you can then select all of them with \`prodigy-mark-all\` and then \`prodigy-start\` to kick them all off.
+This interface takes a lot of inspiration from `dired` in that services can be marked and then acted upon in some way so you can start or stop multiple services at one time. In the UI, you can filter services by tags or name, which allows you to build groups of services really easily that pertain to a particular project. After filtering your defined services, you can then select all of them with `prodigy-mark-all` and then `prodigy-start` to kick them all off.
 
 Here's a list of all the default keybindings in the \`prodigy-mode\` buffer:
 
@@ -99,11 +100,11 @@ You can see here that it indicates a \`ready-message\`. This tag attribute will 
 (prodigy-define-tag
   :name 'rails
   :on-output (lambda (&rest args)
-               (let ((output (plist-get args :output))
-                     (service (plist-get args :service)))
-                 (when (or (s-matches? "Listening on 0\.0\.0\.0:[0-9]+, CTRL\\+C to stop" output)
-                           (s-matches? "Use Ctrl-C to stop" output))
-                   (prodigy-set-status service 'ready)))))
+	       (let ((output (plist-get args :output))
+		     (service (plist-get args :service)))
+		 (when (or (s-matches? "Listening on 0\.0\.0\.0:[0-9]+, CTRL\\+C to stop" output)
+			   (s-matches? "Use Ctrl-C to stop" output))
+		   (prodigy-set-status service 'ready)))))
 ```
 
 This is basically ripped straight from Prodigy's README but it works like a charm for me. Every output log line will run this callback and is useful for triggering custom side effects or, as I'm doing here, telling prodigy the service is ready. I run 3 Rails apps so being able to just tag them all with \`'rails\` makes it easy to add the configuration everywhere without rewriting it everytime and tells me what behavior the Prodigy services is relying on at a glance in the prodigy buffer. You don't _have_ to do it this way, I just found it useful to experiment with as I was configuring things, so I left it.
@@ -163,11 +164,11 @@ Since I use doom-emacs as my base distribution, YMMV on some of the keybindings 
 That's the intro to Prodigy and managing local services with it. If you're interested in a few things on my todo-list to implement for myself for your own inspiration read on...
 
 
-## Future Customizations {#future-customizations}
+## Future Customization {#future-customization}
 
 -   Modeline integration
     -   Place the number of running services for a project or with a specific tag output in the modeline. I'd also like to map this to `projectile-project-root` and a `tag` so as I'm switching projects or repositories, I can keep a birds eye view of the services running at a glance in the modeline.
     -   Utilize `prodigy-output-filters` to either alert me or dump a message in the modeline so I can easily be notified of exceptions being raised in the log output of a particular buffer.
 -   Additional macro-esque keybindings
     -   Whenever I switch branches, I'd like to run one keybinding to kill all services running, run a sync command for the project, and then re-start all the services for a project with some message output or a `compilation-mode` style "logging."
--   Dynamically create Prodigy services from Procfile entires and/or conventional rails, yarn, or npm commands based on the project.
+-   Dynamically create Prodigy services from Procfile entries and/or conventional rails, yarn, or npm commands based on the project.
