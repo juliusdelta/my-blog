@@ -10,7 +10,7 @@
 #!/bin/bash
 echo "Building hugo..."
 
-hugo -b 2>&1
+hugo 2>&1
 echo "Hugo site built!"
 
 echo "Copying _redirects..."
