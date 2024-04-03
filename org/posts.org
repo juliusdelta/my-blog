@@ -15,11 +15,11 @@
 #+hugo_custom_front_matter: :ShowBreadCrumbs: true
 #+hugo_custom_front_matter: :ShowPostNavLinks: true
 
-* DONE Creating Transient Menus in Emacs :emacs:tools:transient:@emacs:
+* TODO Transient Creating Menus in Emacs :emacs:tools:transient:@emacs:
 :PROPERTIES:
 :EXPORT_HUGO_BUNDLE: transient-emacs
 :EXPORT_FILE_NAME: index
-:EXPORT_DATE: 2024-03-23
+:EXPORT_DATE: 2024-03-27
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Building custom Transient menus is a great way to enhance day to day workflows"
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
@@ -41,42 +41,27 @@ Transient is the library used to implement the keyboard-driven “menus” in Ma
 Transient means temporary. Transient gets its name from the temporary keymap and the popup UI for displaying that keymap.
 #+end_quote
 
-** Understandinding the Basics
+** Foundation
 A Transient menu is made of up of 3 parts: =prefix=, =suffix= and =infix=.
 
-*Prefix* - represents a command to "open" a transient menu. For example =magit-status= is a prefix which will initialize and open the =magit-status= buffer.
+- *Prefix*: represents a command to "open" a transient menu. For example =magit-status= is a prefix which will initialize and open the =magit-status= buffer.
 
-*Suffix* - represents the "output" command. This is whats invoked inside of a transient menu to perform some kind of operation. For example in =magit= calling =magit-switch-branch= is a suffix which has a =(completing-read)= in front of it.
+- *Suffix*: represents the "output" command. This is whats invoked inside of a transient menu to perform some kind of operation. For example in =magit= calling =magit-switch-branch= is a suffix which has a =(completing-read)= in front of it.
 
-*Infix* - represent the "arguments" or the intermediary state of a transient. For example, adding =-f, --force-with-lease= means you're using an infix for the =magit-push= suffix.
+- *Infix*: represent the "arguments" or the intermediary state of a transient. For example, adding =-f, --force-with-lease= means you're using an infix for the =magit-push= suffix.
 
 There are 2 additional things to understand about transients:
 
-- Suffixes can call prefixes allowing for "nesting" of "menus." In =magit= when a commit is at point and you call `magit-diff` that is a suffix that is a /really/ just a prefix with it's own set of infixes and suffixes. See Example N below for a more elaborate example of this.
+- Suffixes can call prefixes allowing for "nesting" of "menus." In =magit= when a commit is at point and you call =magit-diff= that is a suffix that is a /really/ just a prefix with it's own set of infixes and suffixes. See Example N below for a more elaborate example of this.
   - Think of it this way: =Prefix -> Suffix -> Prefix -> ...=
 - State can be persisted between Suffixes and Prefixes to build very robust UIs that engage in very complex behavior while exposing a simple view to the user.
 
-** Personal Transients
+** Define
 While the actual model is much more complex than I've lead on and has many more domain concepts to understand than I'm going to layout, defining simple transients can enhance your workflow in meaningful ways once you at least understand the basics. This is by no means a comprehensive guide on Transients but merely a (hopefully) educational and useful overview. For an incredible guide, checkout [[https://github.com/positron-solutions/transient-showcase][positron-solutions Transient Showcase]] which is one of the most thorough guides I've ever seen. If any information I share here is different in Positrons guide, trust Positron.
 
 /*Note:* Each of the Examples work and can be evaluated inside of Emacs and I encourage you to do so!/
 
-#+begin_details
-#+begin_summary
-💬 Evaluating the Examples Quick Guide
-#+end_summary
-	Here's how to evaluate the example code in Emacs in case you don't know or forgot. I encourage you to type each example out instead of copying and pasting.
-
-	1. Create an `example.el` file anywhere -- alternatively a config file can be used for this if preferred.
-	2. Type out the example you're reading over (or copy and paste).
-	3. Now you can do one of two things
-	- Call `M-x (eval-buffer)` to evaluate the whole buffer (recommended since these examples will build on each other)
-
-	- Create a region around the current example code and call `M-x (eval-region)`
-	4. Run the prefix command we're working on with `M-x (my/transient)`
-#+end_details
-
-** Example 1
+*** 1 Prefix ➡️ 1 Suffix
 Lets define a simple transient to just output a message.
 
 #+begin_src emacs-lisp
@@ -94,17 +79,18 @@ Once evaluated, =M-x my/transient= can be invoked and a transient opens with one
 
 [[file:transient-emacs/example-1.gif]]
 
-*** Explain
-=transient-define-prefix= is a macro used to define a simple prefix and create everything Transient needs to operate. The body is where we define our Transient keymap, which in this case is called ="Commands"=. The body can define multiple sets of keymaps and each one should be defined as a vector where the first element is the "name" or "title" the current set of commands, and the subsequent N number of lists make up the whole map. The lists are in the format of (but not limited to) =(KEY DESCRIPTION FUNCTION)=. The =FUNCTION= arg must be =interactive= in order to work.
+**** Explain
+=transient-define-prefix= is a macro used to define a simple prefix and create everything Transient needs to operate. The body is where we define our Transient keymap, which in this case is called ="Commands"=. The body can define multiple sets of keymaps and each one should be defined as a vector where the first element is the "name" or "title display" of the current set of commands, and the subsequent N number of lists make up the whole map. The lists are in the format of (but not limited to) =(KEY DESCRIPTION FUNCTION)=. The =FUNCTION= arg must be =interactive= in order to work.
 
 There are a handful of other ways to define the Transient elements, but we'll stick with this simple version. If you're interested in more complex methods refer back to Positrons guide.
 
 Lets expand our example a bit by adding arguments and switches.
 
-** Example 2
+
+*** 1 Prefix ➕ 2 Infix ➡️ 1 Suffix
 Here we will add 2 types of arguments: switches and arguments with a readable value.
 
-#+begin_src emacs-lisp :hl_lines 4-6,13-16
+#+begin_src emacs-lisp
 (transient-define-prefix my/transient ()
   "My Transient"
 
@@ -125,17 +111,99 @@ Here we will add 2 types of arguments: switches and arguments with a readable va
 
 Now we have a transient that gives us 2 infixes or "arguments".
 
-- =-s= is the keymapped "command" to toggle the =--switch= argument. A good example of this is a terminal command like =ls -a= where =-a= is a boolean type value that toggles =all= on for =ls=.
-- =-n= is the keymapped "command" to prompt for a minibuffer input to enter in what's appended to the =--name== argument.
+- =-s= is the keymapped function to toggle the =--switch= argument. A good example of this is a terminal command like =ls -a= where =-a= is a boolean type value that toggles =all= on for =ls=.
+- =-n= is the keymapped function to prompt for a minibuffer input to enter in what's appended to the =--name== argument.
 
-Once evaluated we can now run the transient with =M-x my/transient= and then press =-= followed by =s= to toggle the =--switch= switch argument. Pressing =-n= will engage the =--name== which will generate a minibuffer prompt to read user input. Once =Enter= is pressed the minibuffer prompt will finish and the value entered will be displayed in the Transient menu itself. Pressing =m= will engage the suffix. With =--switch= toggled on a message should appear in the minibuffer: "Hello: " followed by the input to =--name==. Performing the flow with =--switch= toggled _off_ results in nothing being displayed
+Once evaluated we can now run the transient with =M-x my/transient= and then press =-= followed by =s= to toggle the =--switch= switch argument. Pressing =-= followed by =n= will engage the =--name== argument which will generate a minibuffer prompt to read user input. Once a name is typed in and =Enter= is pressed the minibuffer prompt will finish and the value entered will be displayed in the Transient menu itself. Pressing =m= will run the suffix. With =--switch= toggled on a message should appear in the minibuffer: "Hello: " followed by the input to =--name==. Performing the flow with =--switch= toggled /off/ results in nothing being displayed.
 
 [[file:transient-emacs/example-2.gif]]
 
-*** Explain
-The suffix changes on =my/message-from-transient= are minimal but very important.
+**** Explain
+The suffix changes on =my/message-from-transient= are minimal but very important. We need to make sure that it can /interactively/ take =args= which are passed in by our Transient when the suffix is executed. This is a list of the values of our infixes from our prefix. We can then use the helper function =transient-arg-value= which has the following docstring:
 
-Transient will detect the === and determine that the value for that argument must be some kind of readable input from the user.
+#+begin_quote
+For a switch return a boolean.  For an option return the value as
+a string, using the empty string for the empty value, or nil if
+the option does not appear in ARGS.
+#+end_quote
+
+So when we do =(if (transient-arg-value "--switch" args) ...)= that gets cast into a boolean for us to use. We could pass it directly into something as well without having to cast it ourselves or rely on elisp to do it. It also gives us the value of =--name== as a string so we can just pass it into =(message)=. There's some more flexibility with argument passing we'll get into in a further example.
+
+The shorthand we're using to define infixes makes it easy to define these two types, a switch and arguments.
+
+*** 1 Prefix ➕ 2 Infix ➡️ 1 Suffix ➡️ 1 Prefix
+** Resources
+- [[https://old.reddit.com/r/emacs/comments/m518xh/transient_api_example_alternative_bindings_part_1/][Transient API Example by u/Psionikus: Part 1]]
+- [[https://old.reddit.com/r/emacs/comments/pon0ee/transient_api_example_part_2_transientdostay/][Transient API Example by u/Psionikus: Part 2]]
+- [[https://www.gnu.org/software/emacs/manual/html_mono/transient.html][Official Transient Manual]]
+- [[https://github.com/positron-solutions/transient-showcase][Transient Showcase by positron-solutions]]
+
+** Real World
+For work I developed a Transient menu to run some of the most commonly run tasks in my workflow.
+
+* TODO Personal Infrastructure Updates 2024
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: infrastructure-updates-2024
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2024-03-24
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "I've updated quite a bit of my personal infrastructure over the past few weeks and I have some cool upgrades still in the works."
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+I'm in the process of upgrading my personal infrastructure. Part of the motivation is that I want to write more (this will make sense later) and another part is that I'm building out a homelab. Building a homelab means learning a lot about networking and hosting, both of which have been the focus of my personal learning time. While I'm sure I'll document my homelab ventures in the near term, this post will focus more on this website, and the updates I've made to the infrastructure and why.
+
+** Writing
+I've always been terrible at that "habit of writing." The hope is that this year I can make a change to that. With this update, I've worked hard to remove hurdles and optimize the /process/ of writing, so I can focus more on the content and less on the delivery mechanism. The whole process is now optimized so I can get from idea to deploy /very/ quickly and so I don't have to deal with minor bugs or inconsistencies in my website that have always contributed to the "de-motivization".
+
+** Netlify ➡️ Cloudflare Pages
+First, one of the more notable things about this website is that it's migrated from [[https://www.netlify.com/][Netlify]] to [[https://pages.cloudflare.com/][Cloudflare Pages]]. Netlify was also managing my DNS and so my domain had been pointing to their domain servers for about 5 years (to my surprise really, I had forgotten I had done this.) Netlify was great for what it was, especially for free, but with consolidation into Cloudflare for everything "hosting" of mine, it seemed to make sense to migrate away and take advantage of what Cloudflare has to offer. Netlifys pricing model also heavily restricted my limited use. The only thing I had access to for free was the actual hosting part. It seemed like every other feature incurred an additional monthly charge I just couldn't justify.
+
+It also helps that Cloudflare was already starting to manage my DNS because I'm using a custom email domain. I also plan to use Cloudflare as a reverse proxy for some self hosted services, so consolidating everything down to one provider makes sense. While my domain is currently belongs to GoDaddy's registrar, I plan to migrate that to Cloudflare within the month.
+
+Based on everything I've seen and setup so far, it seems like I will be a long time paying customer of Cloudflare.
+
+** Zola ➡️ Hugo
+For years I've been using [[https://getzola.org][Zola]] as the static site generator for my personal blog. It was great for that stage in my writing habit because I barely used it and didn't really have motivation to do a whole lot of modifications to make it work for me. However, now things have changed a bit and I need my SSG to function a certain way, for reasons I'll lay out further down, and Zola just does not fit the bill anymore. Zola is fantastic, especially for those gifted developers who can design and manifest those designs in CSS & HTML/Tera templates. I however, am not one of those developers.
+
+*** The Good
+Zola is incredibly fast. I did some tests on it several years ago by programmatically generating thousands of markdown files of various lengths and adding a few thousand static assets linked in all of those files. Zola /still/ built in seconds. It also has an extremely simple model and configuration making it easy to modify a theme or spin everything up from scratch. The template support is pretty robust and customization of the actual site has a very high level of support. However overtime I kept becoming increasingly frustrated with it.
+*** The Bad
+Zola suffers from a few /interesting/ design choices. One of which is the use of [[https://www.sublimetext.com/docs/syntax.html][Sublime Syntax Definitions]] for it's syntax highlighting foundation. I'm not sure I see a strong case for this, but as a developer who writes a lot about code I want my syntax highlighting to be perfect. Also, as it turns out, there isn't a thorough sublime syntax definition for =elisp=, a language I demonstrate a lot in my writing. I looked for years for one and couldn't find it, leaving me to default without it.
+
+The Zola community itself is quite small and as a result, the tools & themes built for Zola are in their infancy or just not maintained anymore. I don't want to spend my time working on the design of my website, I just want to write meaningfully, deploy, and move on. The theme selection is sub-par, especially compared with Hugo and the customization options are lacking for someone like me.
+
+Zola also suffers from a lack of build tooling. There's not much I can do to change the compilation of assets or inject other generated material without introducing another build tool like NPM. I /really/ didn't want to do this just to get things running in a simple way. The entire framework is opinionated, which is ok (I'm a Rails developer after all), but I just don't think those opinions are in a reasonable delta with mine.
+
+*** Hugo
+I've seen Hugo around for years but I'd never used it in a meaningful way. I would frequently browse the [[https://themes.gohugo.io/][themes on Hugos webiste]] and end up envious that so much care and thought had been put into some. Hugo also appears to be an order of magnitude more robust in terms of customization than Zola was while simultaneously having /enough/ conventions to spin things up quickly. There is also =org-mode= tooling for Hugo in the form of [[https://ox-hugo.scripter.co/][ox-hugo]], which is an org babel export backend. Ox-hugo was a big motivator in changing systems over because it allows me to have a *much* simpler process in my workflow.
+
+**** The new (and improved) writing process
+
+#+begin_quote
+"Conventional wisdom holds that motivation is the key to habit change. Maybe if you really wanted it, you’d actually do it. But the truth is, our real motivation is to be lazy and to do what is convenient. And despite what the latest productivity best seller will tell you, this is a smart strategy, not a dumb one."
+
+-- Atomic Habits by James Clear
+#+end_quote
+
+As I mentioned earlier, there is an =org-mode= package to export to Hugo which simplifies the process drastically. All of my posts now live in a single file =posts.org= which are separated by the top level headings. Frontmatter can be set in two different ways:
+
+- The top level file configuration
+- The content's top heading
+
+Which means I can set all my default frontmatter and override what's necessary in each heading. I also created a =yas-snippet= so I can just type =<post= and hit =[TAB]= and it auto-expands all the frontmatter for every heading. Once the post is written, it needs to be tangled to the write destination =.md= file. Luckily =ox-hugo= has a minor mode that I've enabled in my =.dir-locals.el= which will auto tangle on save, which will remove even /more/ steps from the process. So as it stands today, the entire process is:
+
+1. Create a new top-level heading
+2. Engage my snippet: =<post= -> =[TAB]=
+3. Type my post title: =[TAB]=
+4. Fill in my frontmatter: =[TAB]=
+5. Write content
+6. git stage, commit, & push
+7. Done.
+
+** Summary
+
+All in all, I probably spent a good 8 hours configuring Hugo and am already very satisfied with where it is now and don't plan on making any huge changes at all.
 
 * DONE Managing Local Services in Emacs with Prodigy :emacs:packages:tools:@emacs:
 :PROPERTIES:
@@ -180,7 +248,7 @@ You can also very easily open a buffer with the log output for inspecting/debugg
 
 [[file:emacs-prodigy/prodigy-log.jpeg]]
 
-This interface takes a lot of inspiration from `dired` in that services can be marked and then acted upon in some way so you can start or stop multiple services at one time. In the UI, you can filter services by tags or name, which allows you to build groups of services really easily that pertain to a particular project. After filtering your defined services, you can then select all of them with `prodigy-mark-all` and then `prodigy-start` to kick them all off.
+This interface takes a lot of inspiration from =dired= in that services can be marked and then acted upon in some way so you can start or stop multiple services at one time. In the UI, you can filter services by tags or name, which allows you to build groups of services really easily that pertain to a particular project. After filtering your defined services, you can then select all of them with =prodigy-mark-all= and then =prodigy-start= to kick them all off.
 
 Here's a list of all the default keybindings in the `prodigy-mode` buffer:
 
@@ -236,11 +304,11 @@ You can see here that it indicates a `ready-message`. This tag attribute will ut
 (prodigy-define-tag
   :name 'rails
   :on-output (lambda (&rest args)
-               (let ((output (plist-get args :output))
-                     (service (plist-get args :service)))
-                 (when (or (s-matches? "Listening on 0\.0\.0\.0:[0-9]+, CTRL\\+C to stop" output)
-                           (s-matches? "Use Ctrl-C to stop" output))
-                   (prodigy-set-status service 'ready)))))
+	       (let ((output (plist-get args :output))
+		     (service (plist-get args :service)))
+		 (when (or (s-matches? "Listening on 0\.0\.0\.0:[0-9]+, CTRL\\+C to stop" output)
+			   (s-matches? "Use Ctrl-C to stop" output))
+		   (prodigy-set-status service 'ready)))))
 #+end_src
 
 This is basically ripped straight from Prodigy's README but it works like a charm for me. Every output log line will run this callback and is useful for triggering custom side effects or, as I'm doing here, telling prodigy the service is ready. I run 3 Rails apps so being able to just tag them all with `'rails` makes it easy to add the configuration everywhere without rewriting it everytime and tells me what behavior the Prodigy services is relying on at a glance in the prodigy buffer. You don't /have/ to do it this way, I just found it useful to experiment with as I was configuring things, so I left it.

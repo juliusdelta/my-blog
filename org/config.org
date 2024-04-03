@@ -159,6 +159,8 @@ Profile mode is a PaperMod setting that will display a splash page before gettin
       url: "https://github.com/juliusdelta"
     - name: email
       url: "public@jds.work"
+    - name: rss
+      url: "/index.xml"
 
   cover:
     hidden: false # hide everywhere but not in structured data
