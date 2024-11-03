@@ -39,9 +39,9 @@ I'd consider moving back to Zola, in fact I'd probably prefer to at some point i
 Currently this site is hosted on Cloudflare pages, with a GoDaddy domain, with DNS managed by Cloudeflare. GoDaddy kind of sucks for various reasons and soon enough I plan to migrate ownership to Cloudflares registrar. I'm currently using the [[https://github.com/adityatelange/hugo-PaperMod/tree/master][PaperModX]] theme.
 
 #+begin_src yaml
-baseURL: https://jds.work
+baseURL: https://jd.codes
 languageCode: en-us
-title: JDs Work
+title: JD Codes
 paginate: 5
 theme: ["PaperModX"]
 enableRobotsTXT: true
@@ -114,7 +114,7 @@ assets:
 
 #+begin_src yaml
   label:
-    text: "JDs Work"
+    text: "JD Codes"
     icon: /apple-touch-icon.png
     iconHeight: 35
 #+end_src
@@ -123,7 +123,7 @@ Profile mode is a PaperMod setting that will display a splash page before gettin
 #+begin_src yaml
   profileMode:
     enabled: false
-    title: JDs Work
+    title: JD Codes
     subtitle: "A place to write about software development, emacs, and working in the 21st century."
     imageUrl: "<img location>"
     imageWidth: 120
