@@ -1,6 +1,6 @@
-baseURL: https://jds.work
+baseURL: https://jd.codes
 languageCode: en-us
-title: JDs Work
+title: JD Codes
 paginate: 5
 theme: ["PaperModX"]
 enableRobotsTXT: true
@@ -45,13 +45,13 @@ params:
   TocSide: right
 
   label:
-    text: "JDs Work"
+    text: "JD Codes"
     icon: /apple-touch-icon.png
     iconHeight: 35
 
   profileMode:
     enabled: false
-    title: JDs Work
+    title: JD Codes
     subtitle: "A place to write about software development, emacs, and working in the 21st century."
     imageUrl: "<img location>"
     imageWidth: 120
