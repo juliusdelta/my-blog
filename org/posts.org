@@ -15,6 +15,18 @@
 #+hugo_custom_front_matter: :ShowBreadCrumbs: true
 #+hugo_custom_front_matter: :ShowPostNavLinks: true
 
+* TODO ActiveModel Basics Extended
+ :PROPERTIES:
+ :EXPORT_HUGO_BUNDLE: active-mode-basics
+ :EXPORT_FILE_NAME: index
+ :EXPORT_DATE: 2024-11-04
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "An overview of ActiveModel and some useful implementations"
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+ :END:
+ =ActiveModel= is an extremely useful piece of Rails, that extends far beyond just normal Rails models. Using =ActiveModel= to create POROs (plain old ruby objects) gives them a super power, and a familiar interface for future developers to understand how to interact with and extend them. This guide is not a replacement for the fantastic [[https://guides.rubyonrails.org/active_model_basics.html][Rails Guide on ActiveModel]], but instead aims to be an addendum of more implementation examples and explanations.
+
+
 * DONE Quick Tip: Git - Rebasing Branches
  :PROPERTIES:
  :EXPORT_HUGO_BUNDLE: branches-off-branches
@@ -84,15 +96,15 @@ b-1
 
 **Note:** It's important that you make sure your local =main= has that merge commit in it's history otherwise you'll end up with weird conflicts.
 
-* TODO Transient Creating Menus in Emacs :emacs:tools:transient:@emacs:
+* DONE Transient Menus in Emacs pt. 1 :emacs:tools:transient:@emacs:
 :PROPERTIES:
 :EXPORT_HUGO_BUNDLE: transient-emacs
 :EXPORT_FILE_NAME: index
-:EXPORT_DATE: 2024-03-27
+:EXPORT_DATE: 2024-11-13
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "Building custom Transient menus is a great way to enhance day to day workflows"
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
-:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :cover '((image . "transient.png") (alt . "emacs transient menu") (caption . "Image taken from the amazing [Jonas Bernoulli](https://emacsair.me/), developer of Magit & Transient") (relative . true))
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :cover '((image . "posts/transient-emacs/transient.png") (alt . "emacs transient menu") (caption . "Image taken from the amazing [Jonas Bernoulli](https://emacsair.me/), developer of Magit & Transient") (relative . true))
 :END:
 
 [[https://magit.vc/][Magit]] is an innovative package that provides an amazing interface over git. The complexity of its UI is completely hidden away thanks to another package born out of Magit called [[https://www.gnu.org/software/emacs/manual/html_mono/transient.html][Transient]]. Transient is so innovative that it was added to emacs core in 2021. Understanding at least the basics of Transient can provide alot of value in building tools to enhance various workflows.
@@ -121,9 +133,13 @@ A Transient menu is made of up of 3 parts: =prefix=, =suffix= and =infix=.
 
 There are 2 additional things to understand about transients:
 
-- Suffixes can call prefixes allowing for "nesting" of "menus." In =magit= when a commit is at point and you call =magit-diff= that is a suffix that is a /really/ just a prefix with it's own set of infixes and suffixes. See Example N below for a more elaborate example of this.
+- Suffixes can call prefixes allowing for "nesting" of "menus." In =magit= when a commit is at point and you call =magit-diff= that is a suffix that is a /really/ just a prefix with it's own set of infixes and suffixes. See Example 3 below for a more elaborate example of this.
   - Think of it this way: =Prefix -> Suffix -> Prefix -> ...=
 - State can be persisted between Suffixes and Prefixes to build very robust UIs that engage in very complex behavior while exposing a simple view to the user.
+
+#+begin_quote
+Note: I don't go over state persisting through prefixes in the post. I do plan on doing a follow up for more complex situations as I continue to learn.
+#+end_quote
 
 ** Define
 While the actual model is much more complex than I've lead on and has many more domain concepts to understand than I'm going to layout, defining simple transients can enhance your workflow in meaningful ways once you at least understand the basics. This is by no means a comprehensive guide on Transients but merely a (hopefully) educational and useful overview. For an incredible guide, checkout [[https://github.com/positron-solutions/transient-showcase][positron-solutions Transient Showcase]] which is one of the most thorough guides I've ever seen. If any information I share here is different in Positrons guide, trust Positron.
@@ -154,7 +170,6 @@ Once evaluated, =M-x my/transient= can be invoked and a transient opens with one
 There are a handful of other ways to define the Transient elements, but we'll stick with this simple version. If you're interested in more complex methods refer back to Positrons guide.
 
 Lets expand our example a bit by adding arguments and switches.
-
 
 *** 1 Prefix ➕ 2 Infix ➡️ 1 Suffix
 Here we will add 2 types of arguments: switches and arguments with a readable value.
@@ -201,14 +216,130 @@ So when we do =(if (transient-arg-value "--switch" args) ...)= that gets cast in
 The shorthand we're using to define infixes makes it easy to define these two types, a switch and arguments.
 
 *** 1 Prefix ➕ 2 Infix ➡️ 1 Suffix ➡️ 1 Prefix
+Lets expand our example by demonstrating the composability of transient menus. We'll perform essentially the same example as before but instead of just triggering a =(message ...)= function, our suffix will instead point to a prefix, based on the infix arguments.
+#+begin_src emacs-lisp
+(transient-define-prefix my/transient ()
+  "My Transient"
+
+  ["Arguments & Switches"
+    ("-s" "Switch" "--switch")
+    ("-n" "Name Argument" "--name=")]
+
+  ["Commands"
+    ("m" "message" my/message-from-transient)
+    ("c" "go to composed" my/composed-transient)])
+
+(defun my/message-from-transient (&optional args)
+  "Just a quick testing function."
+  (interactive (list (transient-args transient-current-command)))
+  (if (transient-arg-value "--switch" args)
+    (message
+      (concat "Hello: " (transient-arg-value "--name=" args)))))
+
+(transient-define-prefix my/composed-transient ()
+  "My Composed Transient"
+
+  ["Arguments & Switches"
+    ("-l" "Loop" "--loop")]
+
+  ["Commands"
+    ("x" "Execute" my/composed-suffix)])
+
+(defun my/composed-suffix (&optional args)
+  (interactive (list (transient-args transient-current-command)))
+  (if (transient-arg-value "--loop" args)
+      (my/transient)))
+#+end_src
+
+Now we have a transient that provides 2 infixes as before, but now has another suffix that is in fact a prefix, a "sub-menu"! Then it uses an infix to determine the subsequent action when the suffix is called. If the =--loop= argument is set to =true=, we then loop back to our original prefix as this commands suffix.
+
+**** Explain
+Here we simply expand on everything we've learned up to this point and simply call a prefix /as a suffix/. This demonstrates the composability of transients in that we created a "sub menu" for our main transient. The example isn't truly relying on the infixes to determine the second suffix/prefix behavior but that's for a subsequent post. Refer to the resources listed below for more information on that. The concept here is important to grasp as it's the foundation for building complex structured menus with transient.
+
+[[file:transient-emacs/example-3.gif]]
+** Real World
+The usefulness of creating your own transients goes far beyond just developing packages. At my day job I use a transient menu to run our test suite. While I'm not a fan of how our test suite is setup, I wanted to make it as painless to interact with as possible.
+*** Overview
+I work on a Ruby on Rails application that utilizes Minitest. In the command line you can normally run the following =bin/rails test path/to/test.rb= and the suite will run. You can also optionally provide a line number to run a specific test instead of a whole file like =bin/rails test path/to/test.rb:50=. While there is a litany of ways to improve this experience with tools like =FZF=, I don't want to break my flow by switching windows.
+
+Unfortunately,we also use environment variables that dictate additional behavior for our test suite such as providing specific database seeds, or running selenium on a headless browser live so you can debug end to end tests. While there are better ways to manage complex test suites, I'll make do with it and let emacs handle the annoying stuff.
+
+At the end of it all, I end up with a test command that looks like: =SKIP_SEEDS=true MAGIC_TEST=0 PRECOMPILE_ASSETS=false rails test path/to/test.rb=. Typing that sucks, and setting them by default in my shell doesn't do much because they change so often in my normal work. So I wrote a transient menu to make things easy for me.
+
+*** Commander.el
+I named it =commander.el= even though it's not a package I'm providing publicly. It's just for me and I wanted a cool name to keep it separate from my normal configuration files.
+
+#+begin_src emacs-lisp
+(transient-define-prefix jd/commander ()
+       "Transient for running Rails tests in CF2."
+       ["Testing Arguments"
+        ("s" "Skip Seeds" "SKIP_SEEDS=" :always-read t :allow-empty nil :choices ("true" "false")
+         :init-value (lambda (obj) (oset obj value "true")))
+
+        ("a" "Precompile Assets" "PRECOMPILE_ASSETS="
+         :always-read t
+         :allow-empty nil
+         :choices ("true" "false")
+         :init-value (lambda (obj) (oset obj value "false")))
+
+        ("c" "Retry Count" "RETRY_COUNT=" :always-read t :allow-empty nil
+         :init-value (lambda (obj) (oset obj value "0")))
+
+        ("-m" "Magic Test" "MAGIC_TEST=1")]
+
+       ["Testing"
+        ("t" "Run Test" commander--run-current-file)
+        ("p" "Run Test at Point" commander--run-command-at-point)
+        ("f" "Find test and run" commander--find-test-and-run)]
+
+       ["Commands"
+        ("d" "Make dev-sync" commander--dev-sync)
+
+        ("r" "Rails" jd/rails-commander)])
+
+;; ...
+
+(defun commander--run-current-file (&optional args)
+  "Suffix for using current buffer-file-name as relevant test file."
+  (interactive (list (transient-args 'jd/commander)))
+  (commander--run-command (concat (mapconcat #'identity args " ") (commander--test-cmd (commander--current-file)))))
+
+(defun commander--find-test-and-run (&optional args)
+  "Suffix for using completing-read to locate relevant test file."
+  (interactive (list (transient-args 'jd/commander)))
+  (commander--run-command (concat (mapconcat #'identity args " ") (commander--test-cmd (commander--find-file)))))
+
+(defun commander--run-command-at-point (&optional args)
+  "Suffix for using current buffer-file-name and line-at-pos as relevant test."
+  (interactive (list (transient-args 'jd/commander)))
+  (commander--run-command (concat (mapconcat #'identity args " ") (commander--test-cmd (commander--current-file-at-point)))))
+
+;; ...
+
+(defun commander--run-command (cmd)
+  "Runs CMD in project root in compilation mode buffer."
+  (interactive)
+  (when (get-buffer "*commander test*")
+    (kill-buffer "*commander test*"))
+  (with-current-buffer (get-buffer-create "*commander test*")
+    (setq compilation-scroll-output t)
+    (setq default-directory (projectile-project-root))
+    (compilation-start cmd 'minitest-compilation-mode)))
+#+end_src
+
+I have this bound to =<leader> r= which for me is =SPC r=. This allows me to toggle on any environment variables and essentially build the testing command I need. I then use =(compilation-start COMMAND)= to run my test in a controlled popup buffer so I can easily see the results while I'm continuing to code. I've also set up =commander--run-current-file= and =comander--run-command-at-point=. =commander--run-current-file= will just run the generated command for the file that open in the current buffer. So =...env vars rails test path/to/test.rb=, while =commander--run-at-point= will run the command and include the number line at the current cursor point, so I can just run a single test without any issue.
+
+This has sped up my workflow tremendously and made testing way faster for me as I don't have to bother with building a command from scratch, but I can instead just build it with a transient.
+
+** Conclusion
+Hopefully this post has provided some inspiration for you to get into building transient menus. I'm still pretty new to elisp and learning about transient.el so there maybe some inaccuracies here and there. I also elected to use the =transient-define-prefix= macro instead of the more formal methods for creating a transient, but the macro is probably sufficient for most use cases like mine.
+
+Below are links to resources that helped to expand my own knowledge and even inspire this post. A big shout out goes to Jonas for creating such an incredible package as well as positron-solutions for such a thorough guides through it all.
 ** Resources
 - [[https://old.reddit.com/r/emacs/comments/m518xh/transient_api_example_alternative_bindings_part_1/][Transient API Example by u/Psionikus: Part 1]]
 - [[https://old.reddit.com/r/emacs/comments/pon0ee/transient_api_example_part_2_transientdostay/][Transient API Example by u/Psionikus: Part 2]]
 - [[https://www.gnu.org/software/emacs/manual/html_mono/transient.html][Official Transient Manual]]
 - [[https://github.com/positron-solutions/transient-showcase][Transient Showcase by positron-solutions]]
-
-** Real World
-For work I developed a Transient menu to run some of the most commonly run tasks in my workflow.
 
 * TODO Personal Infrastructure Updates 2024
 :PROPERTIES:
