@@ -9,7 +9,7 @@ description: "Building custom Transient menus is a great way to enhance day to d
 ShowToc: true
 TocOpen: true
 cover:
-  image: "posts/transient-emacs/transient.png"
+  image: "transient.png"
   alt: "emacs transient menu"
   caption: "Image taken from the amazing [Jonas Bernoulli](https://emacsair.me/), developer of Magit & Transient"
   relative: "true"
