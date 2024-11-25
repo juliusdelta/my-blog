@@ -2,6 +2,8 @@
 title: "Quick Tip: Git - Rebasing Branches"
 author: ["JD"]
 date: 2024-10-11
+tags: ["git"]
+categories: ["development"]
 draft: false
 description: "A quick tip when dealing with branches off branches."
 ShowToc: false

@@ -221,6 +221,9 @@ Refer to [[https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs#using-hugos-
 #+begin_src yaml
 pygmentsUseClasses: true
 markup:
+  goldmark:
+    renderer:
+      unsafe: true
   highlight:
     noClasses: false
     # anchorLineNos: true

@@ -15,7 +15,106 @@
 #+hugo_custom_front_matter: :ShowBreadCrumbs: true
 #+hugo_custom_front_matter: :ShowPostNavLinks: true
 
-* DONE Kamal Tip - Private Network only Database Server
+* TODO Why use Magit? :emacs:magit:@emacs:
+ :PROPERTIES:
+ :EXPORT_HUGO_BUNDLE: why-magit
+ :EXPORT_FILE_NAME: index
+ :EXPORT_DATE: 2024-11-24
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description "What are the advantages of using a tool like Magit? What makes it so great?"
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+ :END:
+
+There was a Reddit post I came across titled [[https://old.reddit.com/r/emacs/comments/1gybfgm/why_use_magit/?ref=share&ref_source=link]["Why use magit?"]]. It appeared there was some reluctance by the author when it comes to using Magit to manage their =git= workflow. I thought I'd respond with a post about /why/ Magit is so incredible and how I use it on a day to day basis for all my =git= operations, even complex ones.
+
+Hello from the future! This post ended up being substantially longer than I had anticipated. Buckle up.
+
+** Brief Context
+*Note*: Feel free to skip to the good stuff at the next heading. This section's probably just an old man droning on. 👴 Maybe other folks will relate though.
+
+I started using Emacs about 6 years ago and Magit was one of the first things I made an effort to learn. It was really an eye opening moment for me about the power of Emacs and the tools at my disposal to perform my job through it. After being frustrated by my ignorance of elisp and how Emacs works, I quit Emacs and went back to VSCode. Very quickly, the tool I missed the most was Magit. I was typing =git= commands manually and frequently having to use the =--help= flag to remind myself of different arguments and setups. There were also plenty of operations that I didn't perform often enough to truly retain long term, so I'd have to look them up every time.
+
+So I went back to Emacs.
+
+Again about 8 months later, I quit again frustrated with my configuration... I missed Magit and Org Mode so much from day one of VSCode again. I could also never figure out how to get VSCode to work exactly as I wanted to.
+
+After a few onThen I found [[https://youtu.be/zxS3zXwV0PU?si=TwE6zxE5rSNvMBFu][this video from Protesilaos Stavrou (also known as Prot)]] about using =occur= and suddenly things started to click. I consumed all Prots videos on Emacs over the course of a few days and dove in again. I finally understood a lot and became way more self suffcient, which just opened up the world of Emacs for me.
+
+While Prot certainly had a lot to do with it, Magit, and to a lesser extent =org-mode=, were the features that kept me wanting to keep using Emacs. Prot is an invaluable resource to the Emacs community and I'd highly recommend checking his content out if your an Emacs user.
+
+** A Few Magit Operations
+Magit basically fully implements the entirety of =git= inside of a complex =transient= menu system. Think of the menu system like a "just in time" display of all available arguments and functions for the =git= operation you're executing. I've written about =transient= and [[/posts/transient-emacs/][making your own transients]] if you're interested in understanding a bit more about how the Magit menu system works. Now on to the interesting stuff. I haven't taken the time to record videos or gifs of the following flows. Instead I'll layout the sequence of commands and explain them. Perhaps if I get enough requests I'll take the time to enhance this post with video material, but for now you'll just get everything in org style (just plain text).
+
+Here's a few Magit operations that make my workflow easier. Some of these don't replace particularly complex git commands however, the workflow is *much* easier using Magit.
+
+*** Magit Log
+Magit provides a very convenient way to look at commit logs scoped to all references, the current branch, another branch, or HEAD. Usually this is bound to =l= to trigger the prefix and then you can see the available log commands to scope the commit logs. You can also choose to view a graph or search them from this prefix as well. If you're unsure what I mean by prefix [[/posts/transient-emacs/][check out my other post on transients]]. There are various paths to get here depending on the context of the suffixes you're running.
+
+I spend a lot of time in this view so I'd advise becoming familiar with it.
+
+*** Cherry Picking Commits
+Every once in a while I'll need to cherry pick a few commits on another branch as I'm sure most other developers do. Here's the Magit operation sequence:
+
+- Checkout your target/working branch
+- =(magit-status)=
+- Open one of the various scoped commit log buffers with =l= by default
+- Use your normal Emacs navigation keybindings to move your cursor to the commit in question.
+
+There are now 2 paths you could take depending on your needs:
+- =A a= to apply and commit or =A A= to apply and stage
+or
+- =Enter= to "open" the commit and see the commit message and different hunks
+- Browse to a specific hunk and put your cursor on it OR you could even just create your own region inside of a hunk...
+- =A a= to apply and commit or =A A= to apply and stage
+*** Fast Fixup
+Sometimes I make some code changes that really should be on a commit from a /few/ commits ago on the current working branch.
+
+- =(magit-status)=
+- =s= over each unstaged file or each individual hunk to stage it
+- =c F= For fast fix up
+  - This pops up a Magit log buffer which has the entire log of commits on the current working branch
+- Place the cursor over the commit want to fix up into
+- =C-c C-c=
+- Done
+
+*** Interactive Rebase
+I only mention this one because the next section is such a big deal but rebasing is easy
+
+- =(magit-status)=
+- =(magit-pull)= activates the Magit pull suffix
+- =-r= to activate =--rebase=
+- =u= for =origin/main= or =e= for "elsewhere" which will prompt you for a branch name
+
+I frequently use this because I like to personally keep a clean git history, and I don't like merge commits muddying up my braches. Eventually, you'll encounter conflicts with your working files. The next session deals with those.
+*** Conflict Resolution
+This is by far one of my favorite operations that Magit helps with. One thing to note here is that I use the [[https://www.gnu.org/software/emacs/manual/html_mono/ediff.html][ediff package]] here as it provides a nice interface for dealing with diffs. It can do a lot more than just diff two files but for the purposes of this demo we'll just go over conflict resolution. So when you have a git conflict:
+
+- =(magit-status)=
+- Put the cursor over the unstaged file that has a conflict
+- =(magit-ediff-dwim)= - this is bound to =e= for me
+  - This will kick you into an =ediff= buffer.
+  - There's 4 total windows here starting from the bottom up:
+    - A small bottom window that represents the command center for =ediff= you can run the =ediff= when you have this window selected. It's represented by some information and a shortcut for opening the help menu
+    - Usually the next one is a regular buffer of the file in question. This buffer is completely editable like normal
+    - Usually the left window buffer is =HEAD=
+    - Usually the right window buffer is the current branch
+
+At this point there 2 paths you could take depending on your needs
+- You can choose to edit the file directly here while you're able to see the diff
+- You'll need to focus the editable window and edit the file as you see fit
+or (while the bottom "command center buffer" is focused)
+- You can use =(ediff-next-difference)= & =(ediff-previous-difference)= to browse the diff in logical chunks
+- You can use =a= or =b= to select the proper diff to apply then move on to the next difference. Usually these are indicated by letters in the modeline but typically it's alphabetical from left to right
+- You'll notice that the editable buffer updates as you pick through the diff this way
+- When you're done, just focus the "command center buffer"
+- =q= to quit, and =ediff= will prompt you to save the changes to the file
+- =y= and you're all set.
+
+Ok that /seemed/ like a lot but the workflow itself is just: =e= =j= =a= =j= =b= =q= =y= for me in the most common cases.
+
+Now if you've done this during the process of a rebase, you can then hit =r r= for =(magit-rebase-continue)= which will move to the next stage of the rebase.
+
+* DONE Kamal Tip - Private Network only Database Server :rails:kamal:@development:
  :PROPERTIES:
  :EXPORT_HUGO_BUNDLE: kamal-tip-private-network
  :EXPORT_FILE_NAME: index
@@ -25,6 +124,19 @@
  :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen false
  :END:
 
+**Edit**: In the original version of this post I made a mistake. This post has been corrected. See the details at the below for an explanation of the mistake and the solution.
+
+#+begin_details
+#+begin_summary
+Mistake Summary & Solution
+#+end_summary
+
+#+begin_quote
+In the original version of this post I had stated that the App servers IP in the Kamal configuration should be set to it's public IP. This is incorrect. With the SSH proxy pointing at the public IP as well, this resulted in a jumphost connection problem, meaning it tried to connect to the public IP through a proxy of the public IP. This obviously didn't work and resulted in inconsistent behavior with Kamal. The solution was to replace the App servers IP address to be the private IP instead. As a result, the only place the public IP of the server is referenced is in the Kamal SSH proxy configuration.
+#+end_quote
+#+end_details
+
+** Updated Post
 I recently started a small side project and decided to use Rails 8 and Kamal. I've jumped on the [[https://world.hey.com/dhh/you-can-t-get-faster-than-no-build-7a44131c][#nobuild]] bandwagon (at least for this project) and thought I'd share a tip for all you non-dev-ops folks like me. I'm very new to the world of dev-ops and don't know or understand much by instinct yet so this may end up being something /very/ obvious for some folks. Hopefully someone in my position finds this useful.
 
 ⚠️ *Disclaimer* ⚠️: I am not a security expert by any means and I implement this in a pretty naive way so please do your own research before committing to using this approach in a production application with any kind of customer data.
@@ -61,7 +173,7 @@ The DB server firewall received a much stricter set of rules.
   - Allow traffic from =11.0.0.0/24= subnet via ICMP any port
   - Allow traffic from =11.0.0.0/24= subnet via UDP any port
 
-This setup ensure that any and all external traffic is blocked by the firewall. I can't even SSH into the DB server at the moment. I could lock this down even more by providing the specific subnet IP of the App server instead of using that entire subnet range but I don't think that's necessary.
+This setup ensures that any and all external traffic is blocked by the firewall. I can't even SSH into the DB server at the moment. I could lock this down even more by providing the specific subnet IP of the App server instead of using that entire subnet range but I don't think that's necessary.
 
 Now that we have those (non-comprehensive) basics out of the way we'll talk about Kamal configuration.
 
@@ -77,10 +189,10 @@ service: my-app
 image: docker-username/my-app
 servers:
   web:
-    - 1.1.1.1 # Use App Server public IP
+    - 11.0.0.10 # Use App Server private network IP
   job:
     hosts:
-      - 1.1.1.1 # Same as App Server public IP
+      - 11.0.0.10 # Same as App Server private network IP
     cmd: bin/jobs
 
 proxy:
@@ -148,12 +260,10 @@ ssh:
 
 This tells Kamal to use the App server as an SSH proxy to all the resources, and since our machines have SSH access to the App server already, *Kamal can connect to resources on the private network we setup because the App server is a member of that private network*. If you're not 100% following, here's a rundown ...
 
-- The App server is open for communication from Kamal via it's public IP address & your SSH keys
-- Only the App server and DB server know about their private network addresses, =11.0.0.10= and =11.0.0.11= respectively
-- The only thing the App server "sees" at the address =11.0.0.11= /is/ the DB server
-- All Kamal knows is that the DB accessory needs to be deployed at =11.0.0.11=
-- Since =11.0.0.11= is a private network address, and not available to the outside world we have to tell Kamal: "Hey, talk to =11.0.0.11= /through/ the App server public IP since you already have access to that."
-- So Kamal uses SSH through the App server (as an SSH proxy) to manage the db accessory on it's private network
+- Since the public IP of the server is what Kamal needs to establish an SSH connection, proxy all SSH traffic /through/ the public IP of App server.
+- All SSH traffic from Kamal happens by Kamal establishing an SSH connection to the App server *first* then connecting to the App Server (again sort of) via it's internal network IP
+- Since we have access to the internal network through the proxy, we can also access the DB accessory on the internal network as well
+- So Kamal uses SSH through the App server public IP (as an SSH proxy) to manage the all the relevant services on the network
 
 [[https://kamal-deploy.org/docs/configuration/ssh/#proxy-host][The docs about configuring an SSH proxy are here]]. Unfortunately they aren't entirely clear if you don't already know what things like this command =ssh -W %h:%p user@proxy-ip= do, which I didn't when I started working on this configuration.
 
@@ -455,7 +565,7 @@ Below are links to resources that helped to expand my own knowledge and even ins
 - [[https://www.gnu.org/software/emacs/manual/html_mono/transient.html][Official Transient Manual]]
 - [[https://github.com/positron-solutions/transient-showcase][Transient Showcase by positron-solutions]]
 
-* DONE Quick Tip: Git - Rebasing Branches
+* DONE Quick Tip: Git - Rebasing Branches :@development:git:
  :PROPERTIES:
  :EXPORT_HUGO_BUNDLE: branches-off-branches
  :EXPORT_FILE_NAME: index

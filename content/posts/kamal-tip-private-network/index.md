@@ -2,10 +2,25 @@
 title: "Kamal Tip - Private Network only Database Server"
 author: ["JD"]
 date: 2024-11-22
+tags: ["rails", "kamal"]
+categories: ["development"]
 draft: false
 ShowToc: false
 TocOpen: false
 ---
+
+****Edit****: In the original version of this post I made a mistake. This post has been corrected. See the details at the below for an explanation of the mistake and the solution.
+
+<details>
+<summary>Mistake Summary &amp; Solution</summary>
+<div class="details">
+
+> In the original version of this post I had stated that the App servers IP in the Kamal configuration should be set to it's public IP. This is incorrect. With the SSH proxy pointing at the public IP as well, this resulted in a jumphost connection problem, meaning it tried to connect to the public IP through a proxy of the public IP. This obviously didn't work and resulted in inconsistent behavior with Kamal. The solution was to replace the App servers IP address to be the private IP instead. As a result, the only place the public IP of the server is referenced is in the Kamal SSH proxy configuration.
+</div>
+</details>
+
+
+## Updated Post {#updated-post}
 
 I recently started a small side project and decided to use Rails 8 and Kamal. I've jumped on the [#nobuild](https://world.hey.com/dhh/you-can-t-get-faster-than-no-build-7a44131c) bandwagon (at least for this project) and thought I'd share a tip for all you non-dev-ops folks like me. I'm very new to the world of dev-ops and don't know or understand much by instinct yet so this may end up being something _very_ obvious for some folks. Hopefully someone in my position finds this useful.
 
@@ -52,7 +67,7 @@ The DB server firewall received a much stricter set of rules.
     -   Allow traffic from `11.0.0.0/24` subnet via ICMP any port
     -   Allow traffic from `11.0.0.0/24` subnet via UDP any port
 
-This setup ensure that any and all external traffic is blocked by the firewall. I can't even SSH into the DB server at the moment. I could lock this down even more by providing the specific subnet IP of the App server instead of using that entire subnet range but I don't think that's necessary.
+This setup ensures that any and all external traffic is blocked by the firewall. I can't even SSH into the DB server at the moment. I could lock this down even more by providing the specific subnet IP of the App server instead of using that entire subnet range but I don't think that's necessary.
 
 Now that we have those (non-comprehensive) basics out of the way we'll talk about Kamal configuration.
 
@@ -72,10 +87,10 @@ service: my-app
 image: docker-username/my-app
 servers:
   web:
-    - 1.1.1.1 # Use App Server public IP
+    - 11.0.0.10 # Use App Server private network IP
   job:
     hosts:
-      - 1.1.1.1 # Same as App Server public IP
+      - 11.0.0.10 # Same as App Server private network IP
     cmd: bin/jobs
 
 proxy:
@@ -146,12 +161,10 @@ ssh:
 
 This tells Kamal to use the App server as an SSH proxy to all the resources, and since our machines have SSH access to the App server already, **Kamal can connect to resources on the private network we setup because the App server is a member of that private network**. If you're not 100% following, here's a rundown ...
 
--   The App server is open for communication from Kamal via it's public IP address &amp; your SSH keys
--   Only the App server and DB server know about their private network addresses, `11.0.0.10` and `11.0.0.11` respectively
--   The only thing the App server "sees" at the address `11.0.0.11` _is_ the DB server
--   All Kamal knows is that the DB accessory needs to be deployed at `11.0.0.11`
--   Since `11.0.0.11` is a private network address, and not available to the outside world we have to tell Kamal: "Hey, talk to `11.0.0.11` _through_ the App server public IP since you already have access to that."
--   So Kamal uses SSH through the App server (as an SSH proxy) to manage the db accessory on it's private network
+-   Since the public IP of the server is what Kamal needs to establish an SSH connection, proxy all SSH traffic _through_ the public IP of App server.
+-   All SSH traffic from Kamal happens by Kamal establishing an SSH connection to the App server **first** then connecting to the App Server (again sort of) via it's internal network IP
+-   Since we have access to the internal network through the proxy, we can also access the DB accessory on the internal network as well
+-   So Kamal uses SSH through the App server public IP (as an SSH proxy) to manage the all the relevant services on the network
 
 [The docs about configuring an SSH proxy are here](https://kamal-deploy.org/docs/configuration/ssh/#proxy-host). Unfortunately they aren't entirely clear if you don't already know what things like this command `ssh -W %h:%p user@proxy-ip` do, which I didn't when I started working on this configuration.
 
