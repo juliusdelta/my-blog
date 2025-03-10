@@ -15,6 +15,440 @@
 #+hugo_custom_front_matter: :ShowBreadCrumbs: true
 #+hugo_custom_front_matter: :ShowPostNavLinks: true
 
+* TODO Mocking and Stubbing in Minitest
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: mocking-stubbing-minitest
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2025-01-04
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+Minitest stubbing and mocking can seem unnecessarily complicated at first, given how little =Object#stub= and =Mock#expect= appear to offer. I'm working on another post about /why/ I prefer Minitest over Rspec and the merits I think Minitest offers. While I love Minitest, I do think the documentation can be pretty minimal sometimes leaving you to figure out the /implications/ of the examples rather than providing more comprehensive examples of various patterns to follow.
+
+** Boundaries
+The standard Minitest library is opinionated in that it doesn't offer a lot of ways to stub interactions. This limitation in Minitest requires you to think about the /bounds/ of the code and what objects are interacting with other objects.
+** Overview
+*** =Object#stub=
+=Object#stub= is a useful API to stub class methods or specific instance methods and return a specified value. It's intention is not to verify something was called (like =Mock#expect=) but instead to provide an "escape hatch" for unimportant details to the test your currently writing.
+
+** Pragmatic Examples & Patterns
+*** Stubbing/Mocking Object Instantiation
+Whenever you need to instantiate an object that isn't passed in as an argument ensuring the proper behavior or it's functions is difficult to do without writing an integration type test. We've ready discussed the importance of having good boundaries in your code and that stretches all the way to your tests. Sometimes Dependency Injection isn't the right call or doesn't fit, or you have some technical debt that is unavoidable and not changable at the current moment. How do you stub/mock this?
+
+Here's an example where the =audit= method instantiates an =Entry= object. =Entry= will always be the class used here, so dependency injection doesn't really make sense unless you do it purely for your tests at this point in time:
+
+#+begin_src ruby
+def audit(**kwargs)
+  entry = Entry.new(**kwargs)
+
+  raise unless entry.valid?
+
+  entry.log!
+end
+#+end_src
+
+This method doesn't really care about the =Entry= instance internals or behavior, just that it responds to =:valid?= and =log!=. The priority of the unit test for =audit= should just be that it:
+- Creates a new =Entry=
+- Raises if it's invalid
+- Calls =#log= on it
+
+That's it. The boundary here ends at the methods we're calling on the =Entry= instance is all we care about. Here are tests written with that in mind:
+
+#+begin_src ruby
+def test_audit_performs_log
+  mock_entry = Minitest::Mock.new
+  mock_entry.expect :valid?, true, []
+  mock_entry.expect :log!, nil, []
+
+  Entry.stub :new, mock_entry do
+    audit some: :args
+  end
+
+  assert_mock mock_entry
+end
+
+def test_audit_raises_when_entry_invalid
+  mock_entry = Minitest::Mock.new
+  mock_entry.expect :valid?, false, []
+
+  Entry.stub :new, mock_entry do
+    assert_raises StandardError do
+      audit some: :args
+    end
+  end
+
+  assert_mock mock_entry
+end
+#+end_src
+
+The test might seem small and insignificant, but if the =audit= method tries to have =Entry= instance behavior /added or removed/ from it this test will fail. We're enforcing the tight contract and boundary with this test and telling future developers that "The only thing this method is responsible for is calling =log!= on a valid =Entry= instance."
+
+Sometimes, we'll need to test the arguments that are passed to =Entry.new= as well in which case it's a bit more complicated but still very explicit. If our =audit= method needs to perform some function on the =kwargs= passed in and then create a new entry we can handle this by mocking the *call* of =:new= instead of just handling the return value. This test is teetering on the line about testing too much, but I think the priority should be testing public methods and not private ones, so if the calculation is or should be private to whatever =Class= or =Module= =audit= lives in, than it should remain so. Here is a test that will cover this use case:
+
+#+begin_src ruby
+def test_audit_performs_log
+  mock_entry_new = Minitest.new
+  mock_entry = Minitest::Mock.new
+
+  mock_entry_new.expect :call, mock_entry, [], some: :val
+
+  mock_entry.expect :valid?, true, []
+  mock_entry.expect :log!, nil, []
+
+  # `:new` is the method name and
+  # `val_or_callable` arg is mocked to return the proper object
+  # in this our mock_entry
+  Entry.stub :new, mock_entry_new do
+    audit some: :val
+  end
+
+  assert_mock mock_entry_new
+  assert_mock mock_entry
+end
+#+end_src
+
+Now, not only do we test that =audit= calls the correct methods on an =Entry= instance, but we're also confirming the arguments the =Entry= instance is created with, since it's private to =audit= it doesn't matter what that is to the world, but it matters what the result is!
+
+* TODO 2024 in Review: Books
+:PROPERTIES:
+:EXPORT_HUGO_BUNDLE: 2024-book-review
+:EXPORT_FILE_NAME: index
+:EXPORT_DATE: 2025-01-02
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+:END:
+
+My goal for 2024 was to read 25 books, and I'm glad to say I read 26 books. The last one was literally completed 10 minutes before the new year, but there's no question that it counts. Here's an overview of what I read and any highlights or special mentions. Any spoilers in this post will be explicitly marked and hidden by default.
+
+** What I read
+This was the year of Brandon Sanderson for me as I finally got around to seeing what all the fuss was about. I was instantly hooked into the Cosmere after Mistborn. I read a few other incredible books and started a few series I aim to finish in 2025.
+
+The following list is not the order I read the books in, but just grouped by series.
+
+| Title                | Series (if applicable)                        | Author               |
+| The Final Empire     | Mistborn Series - Era 1                       | Brandon Sanderson    |
+| Well of Ascension    | Mistborn Series - Era 1                       | Brandon Sanderson    |
+| Hero of Ages         | Mistborn Series - Era 1                       | Brandon Sanderson    |
+| The Way of Kings     | Stormlight Archives Series                    | Brandon Sanderson    |
+| Words of Radiance    | Stormlight Archives Series                    | Brandon Sanderson    |
+| Oathbringer          | Stormlight Archives Series                    | Brandon Sanderson    |
+| Rhythm of War        | Stormlight Archives Series                    | Brandon Sanderson    |
+| Wind and Truth       | Stormlight Archives Series                    | Brandon Sanderson    |
+| Elantris             |                                               | Brandon Sanderson    |
+| Warbreaker           |                                               | Brandon Sanderson    |
+| Dawnshard            |                                               | Brandon Sanderson    |
+| The Alloy of Law     | Mistborn Series - Era 2                       | Brandon Sanderson    |
+| Shadows of Self      | Mistborn Series - Era 2                       | Brandon Sanderson    |
+| Bands of Mourning    | Mistborn Series - Era 2                       | Brandon Sanderson    |
+| The Lost Metal       | Mistborn Series - Era 2                       | Brandon Sanderson    |
+| A Secret History     | Mistborn Series - Novella                     | Brandon Sanderson    |
+| Ars Acanum           | Various Cosmere short stories and collections | Brandon Sanderson    |
+| The Emperors Soul    |                                               | Brandon Sanderson    |
+| Edgedancer           |                                               | Brandon Sanderson    |
+| The Sunlit Man       |                                               | Brandon Sanderson    |
+| The Blighted Stars   | The Devoured Worlds Series                    | Megan O'Keefe        |
+| The Will of the Many | Hierarchy Series                              | James Islington      |
+| Empire of Silence    | The Sun Eater Series                          | Christopher Ruocchio |
+| Project Hail Mary    |                                               | Andy Weir            |
+| Hyperion             | Hyperion Cantos Series                        | Dan Simmons          |
+| Dark Matter          |                                               | Blake Crouch         |
+** A Note on Brandon Sanderson
+Brandon Sanderson has become increasingly popular over the past few years and is no doubt one of the most successful currently living fantasy authors. He appears to care very much about his fans and providing them with not just quality art but also a level of engagement I've never seen another author have. He understands what it's like to be part of a "fandom" and he very much understands how to cater to that. This, no doubt, creates readers of his that are more drawn in by /him/ and not his work, but in my view, this isn't a bad thing at all. Because of Sandersons books, I very much branched out to read some other incredible authors over the past year and am continuing to do so.
+
+There are 3 big reasons why I like Brandon Sanderson:
+- The Cosmere magic system
+- His unparalleled plot organization
+- The thorough demonstrations of "crisis of faith."
+
+*** Magic System
+I'm a programmer by trade and have always loved to tinker with things and topics. Usually this manifests by me spending 3 months learning everything I can about a topic until I get bored and reach for another. It's been everything from chemistry to mathematical models, to coffee making, to "homelabbing." Sometimes they result in a Hobby and other times it just results in knowledge gained. The Cosmere magic system is demonstrated in a scientific way. There's rules, reproducible behavior, management, atomic references, and natural occurences. Sanderson created a "force of nature" not just "magic." This has yielded something interesting for me to /learn/ about and parse as different aspects are revealed in different books.
+
+Most other magic systems I've read consist of only two things: Energy and Expense. A character, via some destiny, prophecy, or magical circumstance gets a great amount of energy to expend to use "magic" and that's about as deep as it gets. A lot of times, the world has been affected by magic, but it's always this ambiguous /thing/ that just provides powers some how or 1 or 2 unique properties. There's no real logic to *how* those things happen, it just sort of does. The magic system in the Cosmere has a logic to it, that supports the surface level effects and grantings of power that characters have. As I said earlier, you learn about it as more of a "force" rather than a "layer of /something/" placed on top of a world/character. This depth has really satisfied the learning side of my brain and it's keeping me very engaged in what Sanderson is writing.
+*** Plot Organization
+Brandon Sanderson has created a lot of content on the Internet about his process for writing. As far as I understand it, he's process requires meticulous planning at the beginning with an outline or two and only then doesn't he begin to write the actual story itself. It's this process that yields to very satisfying payoffs and foreshadowing. In several books, there's always a /minor detail/ which is later used to answer a big question later in the series. He's able to weave the story and connections about relentlessly which produces an extremely satisfying read. So many surprising moments with things that in retrospect were obvious occur that it just leaves plot points very satisfying and makes for fun re-reads.
+*** Faith and Philosophy
+I'm an "ex-vangelical." The details of my faith journey are for another post (or blog entirely) but one thing I find myself relating to with Sandersons characters in several series, is how characters deal with a crisis of faith. That doesn't always mean faith in a god, but also faith in religion as a concept, in a philosophy, or a person. It's actually incredibly moving to see so many personal feelings I've had and dealt/are dealing with laid out on a page.
+
+Sanderson is (was?) a Mormon and had I known that going in, I probably would have been more hesitant to read his work. But after having read it, if I didn't know better, I'd say that he's had the very same struggles I had but maybe with just a different outcome. I very much appreciate this honesty. A lot of other "faith-filled" writers will frequently take one of 2 approaches to these things:
+
+- Omit them entirely to avoid engaging with "tough questions"
+- Make it so obviously a "short-coming" of a character that is later proved to be "obviously false."
+
+Sanderson takes this topic with much more care than other writers do and doesn't seek to answer things really but instead provide an interesting perspective on how various characters deal with these things. He never hits you over the head or makes an outcome too obvious or "on the nose." It really is moving to someone who's struggled with these things as I have and still do.
+
+** Favorites of 2024
+*** Oathbringer
+Oathbringer is by far my favorite book of the Stormlight Archive, and my favorite Brandon Sanderson book by a long shot. The main character story arc that takes place is not only a dark and somewhat gruesome one, but one that still brings hope. One philosphical question I've always had was, "What constitutes a person being 'too far gone' to have hope of redemption in life?" and Oathbringer speaks to that beautifully.
+
+This was my favorite read of 2024
+*** Hero of Ages
+This was the first Sanderson series I completed and the last 100 pages really just floored me.  This was a great introduction to Sanderson and is an eloquent example of the level of his plot planning. My wife is currently reading this and I know she's going to cry :)
+*** The Will of the Many
+Picked this up on a whim and was not disappointed. The world building, character development, and mysteries are just exceptionally well done and yield a fun read. This book wasn't perfect, but definitely worth the purchase and time to read.
+*** Project Hail Mary
+This book is filled to the brim with science and physics explanations as well as biochemistry explanations and illustrations all without being boring or dense. Andy Wier (also author of /The Martian/) paints this incredible science fiction story with such care and detail, while never sacrificing narrative or character development. For a quick read (I finished in about 2.5 reading sessions) it's so worth it.
+
+My only qualm with this book was that the "ending-ending" felt a little unsatisfying and cheesy even though it is "poetic" in it's own rite.
+*** Hyperion
+About 100 pages in this book and I was confused and unmotivated to finish. The structure is very strange and takes a while to understand and follow. It'll probably be surprising to most readers, once you're about halfway through the book, that the structure up till that point is the structure of the whole thing.
+
+That being said, once I understood the structure I was instantly immersed in the events. This is an 80's sci-fi that reads a little bit like /Dune/ which is sort of "slow" in a way while everything is building. The narrative is very non-linear but once things click, than things /really/ click.
+
+There's a pretty gut wrenching story about halfway through the book that, as a father, deeply affected me. So be warned
+** Disappointments
+There wasn't /much/ that I didn't like this year as I didn't read a whole lot and was committed to the Cosmere, but there are a few books I was disappointed with.
+*** Elantris
+This book was good, but was definitely Sandersons weakest work. It's slow at times and I think struggles to establish what it is until about mid-way through. It's a good introduction to Sanderson still, if you're disciplined enough to just force yourself through the book, and would also act as a "there's where to go but up from here" situation once you pgress through the rest of the Cosmere. Mistborn Era 1 is probably the best intro to Sanderson though if I had to choose.
+*** The Blighted Stars
+I wanted so badly to like this book. The type of story is right up my alley, but it just fell very short, short enough that I'm probably just DNF-ing this series since I've heard that this book is the best one.
+
+The good parts are *good*. The story, the characters, the setting, the socio-economic commentary... all of it is top notch. O'keefe really built an incredible world with a fascinating story which actually would satisfy the sci-fi fan in me if it wasn't for one of her stylistic choices.
+
+There's an old film mantra I've heard several times in film commentaries: "Show Don't Tell." I think this also applies to books as well. Demonstrating instead of using exposition for a characters personality, thoughts, or feelings is better because it allows the reader to "discover" and get to know the character instead of just being told everything about them. While there is a layer in which this book follows this path, it violates it in the most irritating way. The rhythm of dialog between characters becomes a disjointed mess as every sentence results in exposition of the characters internal monologue about the sentence. This is common in books, but there's an /offbeat/ feel to it in Blight Stars, and this is never recovered from. I found myself just constantly irritated that every little word meant 2-3 sentences of inner monologue explaining what I probably already understood, especially when character has a "back and forth feeling." I found it so jarring that it took me out of the immersion of the book and made it feel like I was reading the book.
+
+** What I'm Reading in 2025
+I have a long list of books in my TBR for the year. My goal is to read 50 books and branch out from Sci-fi/Fantasy a little bit more than 2024. I also made a deal with my wife for me to read A Court of Thorns and Roses series by Sarah J. Maas |||(romantasy) in exchange for her reading the Mistborn Trilogy. So I'm kicking the year off reading the first book in the series.
+
+I don't have a complete concrete list but here's what I'm planning so far:
+
+*** Finishing the Cosmere
+- Tress of the Emerald Sea
+- Yumi and the Nightmare Painter
+- White Sands
+*** Sci-fi/Fantasy
+- Howling Dark by Christopher Ruocchio
+- The Fall of Hyperion by Dan Simmons
+- The Farseer Trilogy by Robin Hobb
+- The First Law Trilogy by Joe Abercrombie
+- Babel by R.F. Kuang
+*** Technical-(ish)
+- The Art of Doing Science and Engineering by Richard W. Hamming
+- An Elegant Puzzle by Will Larson
+- Tidy First? by Kent Beck
+*** Drama
+- Tuesdays with Morrie by Mitch Albom
+- Stoner by John Willliams and John McGahern
+*** Other
+- Jesus and John Wayne by Kristin Kobes Du Mez
+- Our Fragile Moment by Michael E. Mann
+
+** Wrapping up
+There are a lot of books I want to read, probably sitting somewhere in the hundreds right now. So we'll see where I land with everything when the year is over.
+
+* TODO Rails Heuristics - Validations
+ :PROPERTIES:
+ :EXPORT_HUGO_BUNDLE: rails-heuristics-validations
+ :EXPORT_FILE_NAME: index
+ :EXPORT_DATE: 2024-12-18
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :description
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :ShowToc true
+ :EXPORT_HUGO_CUSTOM_FRONT_MATTER+: :TocOpen true
+ :END:
+
+#+begin_quote
+This is part 1 of a series about applying knowledge of Rails too an application via a few heuristics that I've found helpful.
+
+This guide is going to be based around Rails version 8, so if you're on an older version it's possible some of the APIs have changed or aren't available, however, validations haven't changed much so it's unlikely that will be the case. I'll ensure that I annotate the API if I find anything contrary to that.
+#+end_quote
+
+Model validations in Rails can become untenable very quickly in some circumstances. A lot of this can be solved with good model design, however, sometimes it's unavoidable for them to become complicated. There's a few general heuristics I've begun to follow over the past year to make the validations I write more testable, maintainable, and understandable. The [[https://guides.rubyonrails.org/active_record_validations.html#custom-validators][Rails guide on validations]] is exceptionally informative, however, the purpose of the guides isn't to supply "guidelines" to follow for creating and testing validations, but instead it's intended to provide examples and explanations of available methods to accomplish a goal.
+
+These examples are completely arbitrary, however, I've tried to make each of them meet a complexity threshold in order for the heuristic I recommend make sense.
+
+** Responsibility of Validations
+Validations provide the mechanism to control and implement /policies/ for your data/models. If you're keen, a lot of your business logic can be siphoned away into various types of validations which allows your controllers or other types of objects to simply worry about catching and dealing with errors as opposed to testing several predicates themselves before calling =.save=. Policy objects as a concept exists to provide an expressive way to house a complex predicate conglomerate in order to decide to take one action or another. Since they're standalone objects, they're generally easier to test and maintain long term as well as re-use in different contexts as long as the subject object has the same attributes. Rails validations serve the same purpose as Policy Objects, while not /only/ ever being relegated to an object.
+
+Deciding the role that validations should play in your application or on a specific feature will largely be influenced by a given domain, however, there are a few things that clearly _should_ be in the realm of validations. Since validations are all about policy requirements for attributes, their behavior should only be employed when the given policies themselves are static and don't change.
+
+#+begin_src ruby
+# bad
+account.update(email: email) if URI::MailTo::EMAIL_REGEXP.matches? email
+
+# good
+validates :email, presence: true, format: {with: URI::MailTo::EMAIL_REGEXP}
+
+# bad
+validate -> { Current.user.admin? }
+
+# good
+account.update(status: status) if Current.user.admin?
+#+end_src
+
+
+
+** Example
+Sometimes you have multiple predicates by which you want a validation to be run. The most direct approach would usually be to use a =Proc= inline like:
+#+begin_src ruby
+validates :price, presence: true, if: -> { tax_status.exists? && product.sellable?  }
+#+end_src
+
+More often than not though =tax_status.exists? && product.sellable?= represents a *policy* that would likely show up in other places of the app, at which point extracting to a predicate method makes for consistent design:
+
+#+begin_src ruby
+# app/models/product.rb
+
+validates :price, presence: true, if: :priceable?
+
+# ...
+
+def priceable?
+  tax_status.exists? && product.sellable?
+end
+#+end_src
+
+Lets arbitrarily expand this example a bit to illustrate an additional heuristic to consider. Say we need to validate the =price= amount. If the =price= is greater than =400= than we need to make sure tax can be applied and that the account owner has filled out the required tax forms. However, if the account owner has a =nonprofit= =tax_status= than we should allow any price up to an upper threshold of =5000= but not above. In this case we can use a method:
+
+#+begin_src ruby
+validates :meets_pricing_thresholds?
+
+# ...
+
+def meets_pricing_thresholds?
+  unless price < 400 && (account.tax_status == :nonprofit && price <= 5000 || price >= 400 && account.tax_approved?)
+    errors.add(:price, "price must meet required thresholds for your account")
+  end
+end
+#+end_src
+
+This certainly works, and if your confident this /will never/ change than it's a perfectly acceptable solution. One simplification we can add would be to provide a /name/ to all the actual conditions that make up the =pricing_threshold=. In which case it would be something like this:
+
+#+begin_src ruby
+validates :pricing_thresholds_met?
+
+# ...
+
+def pricing_thresholds_met?
+  unless !taxable_minimum_threshold_met? && (non_profit_threshold_met? || taxable_status_threshold_met?)
+    errors.add(:price, "price must meet required thresholds for your account")
+  end
+end
+
+def taxable_minimum_threshold_met?
+  price < 400
+end
+
+def non_profit_threshold_met?
+  account.tax_status == :nonprofit && price <= 5000
+end
+
+def taxable_status_threshold_met?
+  price >= 400 && account.tax_approved?
+end
+#+end_src
+
+There's a code smell in OOP to watch out for that's when a number of methods use the same word than maybe there's an object that can be extracted from it. While I don't think OOP is always 100% prescriptive for everything, I think there's something valid to that here. The words =thresholds_met= seems to indicate there's a concept of a =PricingThreshold= that should exist explicitly. In order to preserve the focus on validations, lets just look at that concept implemented within the context of validations.
+
+The final heuristic is to extract a validations to a Validator Object when multiple predicates & branching requirements occur. Usually that threshold (pun intended), for me, is 3 predicates. The OOP argument for this is that "since it's a concept that obviously exists and should be given a proper realm of responsibility", but the /more important/ argument is, it's significantly more testable, readable, and maintainable long term.
+
+First we'll just extract that validator
+#+begin_src ruby
+# app/models/product.rb
+validates_with PricingThresholdValidator
+
+# app/validators/pricing_threshold_validator
+class PricingThresholdValidator < ActiveModel::Validator
+  def validate(record)
+    unless taxable_minimum_threshold_met?(record) && (non_profit_threshold_met?(record) || taxable_status_threshold_met?(record))
+      record.errors.add(:price, "price must meet required thresholds for your account")
+    end
+  end
+
+  def taxable_minimum_threshold_met?(record)
+    record.price < 400
+  end
+
+  def non_profit_threshold_met?(record)
+    record.account.tax_status == :nonprofit && record.price <= 5000
+  end
+
+  def taxable_status_threshold_met?(record)
+    record.price >= 400 && record.account.tax_approved?
+  end
+end
+#+end_src
+
+Already we can see how this is easier to reason about, but it also gives us the chance to write tests for this validation:
+#+begin_src ruby
+class PricingValidatorTest < ActiveSupport::TestCase
+  class MockedClass
+    include ActiveModel::API
+
+    attr_accessor :price, :account
+
+    validates_with PricingValidator
+  end
+
+  def test_taxable_minimum_threshold
+    subject = MockedClass.new(price: 399, account: OpenStruct.new(tax_status: :retail, tax_approved?: true))
+
+    assert subject.valid?
+    assert subject.errors.empty
+
+    subject.price = 401
+    subject.account.tax_approved? = false
+
+    refute subject.valid?
+    assert_includes subject.errors.full_messages, "price must meet required thresholds for your account"
+  end
+
+  def test_nonprofit_threshold
+    subject = MockedClass.new(price: 4999, account: OpenStruct.new(tax_status: :nonprofit, tax_approved?: false))
+
+    assert subject.valid?
+    assert subject.errors.empty
+
+    subject.price = 5001
+
+    refute subject.valid?
+    assert_includes subject.errors.full_messages, "price must meet required thresholds for your account"
+  end
+
+  def test_taxable_status_treshold
+    subject = MockedClass.new(price: 401, account: OpenStruct.new(tax_status: :retail, tax_approved?: true))
+
+    assert subject.valid?
+    assert subject.errors.empty
+
+    subject.account.tax_approved? = false
+
+    refute subject.valid?
+    assert_includes subject.errors.full_messages, "price must meet required thresholds for your account"
+  end
+end
+#+end_src
+
+Now that we have tests we can easily refactor to supply a more specific error message /based/ on the specific threshold
+
+#+begin_src ruby
+class PricingThresholdValidator < ActiveModel::Validator
+  def validate(record)
+    if minimum_taxable_threshold_met?(record)
+      validate_non_profit_threshold_met?(record)
+      validate_taxable_status_threshold_met?(record)
+    end
+  end
+
+  def non_profit_threshold_met?(record)
+    unless record.account.tax_status != :nonprofit && record.price <= 5000
+      record.errors.add(:price, "price exceeds maximum non-profit threshold.Amount must be less than 5000")
+    end
+  end
+
+  def taxable_status_threshold_met?(record)
+    unless record.account.tax_status == :nonprofit && record.account.tax_approved?
+      record.errors.add(:price, "account tax policy is required before setting price")
+    end
+  end
+
+  def minimum_taxable_threshold_met?(record)
+    record.price > 400
+  end
+end
+#+end_src
+
 * DONE Kamal Tip - Private Network only Database Server
  :PROPERTIES:
  :EXPORT_HUGO_BUNDLE: kamal-tip-private-network
