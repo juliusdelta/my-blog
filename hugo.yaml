@@ -5,7 +5,7 @@ paginatation:
   pagerSize: 5
 theme: ["PaperModX"]
 enableRobotsTXT: true
-buildDrafts: true
+buildDrafts: false
 buildFuture: false
 buildExpired: false
 
