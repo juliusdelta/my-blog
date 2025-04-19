@@ -30,6 +30,9 @@ params:
   defaultTheme: auto # dark, light
   disableThemeToggle: false
 
+  mermaid:
+    align: "center"
+
   ShowReadingTime: true
   ShowShareButtons: false
   # ShareButtons: ["twitter", "mastodon", "reddit"]
