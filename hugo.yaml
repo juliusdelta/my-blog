@@ -3,7 +3,7 @@ languageCode: en-us
 title: JD Codes
 paginatation:
   pagerSize: 5
-theme: ["PaperModX"]
+theme: ["PaperMod"]
 enableRobotsTXT: true
 buildDrafts: false
 buildFuture: false
