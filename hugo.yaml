@@ -14,6 +14,9 @@ outputs:
     - HTML
     - RSS
     - JSON
+  section:
+    - HTML
+    - RSS
 
 minify:
   disableXML: true
@@ -122,6 +125,10 @@ menu:
       name: tags
       url: /tags/
       weight: 20
+    - identifier: snippets
+      name: snippets
+      url: /snippets/
+      weight: 25
     - identifier: archives
       name: archives
       url: /archives/
