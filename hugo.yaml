@@ -84,6 +84,8 @@ params:
       To get in contact, click on one of the links below. Although, I'm mainly on [`Bluesky`](https://bsky.app/profile/jd.codes) these days.
 
   socialIcons:
+    - name: bluesky
+      url: "https://bsky.app/profile/jd.codes"
     - name: twitter
       url: "https://x.com/ohimjustjd"
     - name: mastodon
